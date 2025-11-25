@@ -8,7 +8,7 @@ class AdherenceLogModel extends AdherenceLogEntity {
     required super.medicationId,
     required super.scheduledTime,
     super.takenTime,
-    required super.status,
+    super.status,
     super.snoozeDuration,
     required super.createdAt,
     super.deviceInfo,
@@ -46,9 +46,7 @@ class AdherenceLogModel extends AdherenceLogEntity {
       ),
       snoozeDuration: data['snoozeDuration'] as int?,
       createdAt: (data['createdAt'] as Timestamp).toDate(),
-      deviceInfo: data['deviceInfo'] != null
-          ? Map<String, dynamic>.from(data['deviceInfo'] as Map)
-          : null,
+      deviceInfo: data['deviceInfo'] as Map<String, dynamic>?,
     );
   }
 
@@ -73,15 +71,15 @@ class AdherenceLogModel extends AdherenceLogEntity {
       'userId': userId,
       'medicationId': medicationId,
       'scheduledTime': scheduledTime.toIso8601String(),
-      'takenTime': takenTime?.toIso8601String(),
+      if (takenTime != null) 'takenTime': takenTime!.toIso8601String(),
       'status': status.name,
-      'snoozeDuration': snoozeDuration,
+      if (snoozeDuration != null) 'snoozeDuration': snoozeDuration,
       'createdAt': createdAt.toIso8601String(),
-      'deviceInfo': deviceInfo,
+      if (deviceInfo != null) 'deviceInfo': deviceInfo,
     };
   }
 
-  /// Convert from JSON
+  /// Convert from JSON (for local storage/caching)
   factory AdherenceLogModel.fromJson(Map<String, dynamic> json) {
     return AdherenceLogModel(
       id: json['id'] as String,
@@ -97,25 +95,34 @@ class AdherenceLogModel extends AdherenceLogEntity {
       ),
       snoozeDuration: json['snoozeDuration'] as int?,
       createdAt: DateTime.parse(json['createdAt'] as String),
-      deviceInfo: json['deviceInfo'] != null
-          ? Map<String, dynamic>.from(json['deviceInfo'] as Map)
-          : null,
-    );
-  }
-
-  /// Convert entity to model
-  AdherenceLogEntity toEntity() {
-    return AdherenceLogEntity(
-      id: id,
-      userId: userId,
-      medicationId: medicationId,
-      scheduledTime: scheduledTime,
-      takenTime: takenTime,
-      status: status,
-      snoozeDuration: snoozeDuration,
-      createdAt: createdAt,
-      deviceInfo: deviceInfo,
+      deviceInfo: json['deviceInfo'] as Map<String, dynamic>?,
     );
   }
 }
 
+/// Extension to convert AdherenceStatus enum to/from string
+extension AdherenceStatusExtension on AdherenceStatus {
+  String get name {
+    switch (this) {
+      case AdherenceStatus.taken:
+        return 'taken';
+      case AdherenceStatus.missed:
+        return 'missed';
+      case AdherenceStatus.snoozed:
+        return 'snoozed';
+    }
+  }
+
+  static AdherenceStatus fromString(String value) {
+    switch (value) {
+      case 'taken':
+        return AdherenceStatus.taken;
+      case 'missed':
+        return AdherenceStatus.missed;
+      case 'snoozed':
+        return AdherenceStatus.snoozed;
+      default:
+        return AdherenceStatus.missed;
+    }
+  }
+}

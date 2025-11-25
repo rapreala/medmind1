@@ -6,18 +6,18 @@ import '../models/adherence_log_model.dart';
 import '../../domain/entities/adherence_log_entity.dart';
 
 abstract class AdherenceRemoteDataSource {
-  Future<List<AdherenceLogModel>> getAdherenceLogs(
-    String userId, {
+  Future<List<AdherenceLogModel>> getAdherenceLogs({
+    required String userId,
     DateTime? startDate,
     DateTime? endDate,
   });
   Future<AdherenceLogModel> logMedicationTaken(AdherenceLogModel log);
   Future<void> updateAdherenceLog(AdherenceLogModel log);
-  Future<Map<String, dynamic>> getAdherenceSummary(
-    String userId,
-    DateTime startDate,
-    DateTime endDate,
-  );
+  Future<Map<String, dynamic>> getAdherenceSummary({
+    required String userId,
+    required DateTime startDate,
+    required DateTime endDate,
+  });
   Stream<List<AdherenceLogModel>> watchAdherenceLogs(String userId);
 }
 
@@ -36,8 +36,8 @@ class AdherenceRemoteDataSourceImpl implements AdherenceRemoteDataSource {
   String get _currentUserId => firebaseAuth.currentUser?.uid ?? '';
 
   @override
-  Future<List<AdherenceLogModel>> getAdherenceLogs(
-    String userId, {
+  Future<List<AdherenceLogModel>> getAdherenceLogs({
+    required String userId,
     DateTime? startDate,
     DateTime? endDate,
   }) async {
@@ -49,20 +49,20 @@ class AdherenceRemoteDataSourceImpl implements AdherenceRemoteDataSource {
 
       if (startDate != null) {
         query = query.where(
-          'scheduledTime',
+          FirebaseConstants.scheduledTimeField,
           isGreaterThanOrEqualTo: Timestamp.fromDate(startDate),
         );
       }
 
       if (endDate != null) {
         query = query.where(
-          'scheduledTime',
+          FirebaseConstants.scheduledTimeField,
           isLessThanOrEqualTo: Timestamp.fromDate(endDate),
         );
       }
 
       final querySnapshot = await query
-          .orderBy('scheduledTime', descending: true)
+          .orderBy(FirebaseConstants.scheduledTimeField, descending: true)
           .get();
 
       return querySnapshot.docs
@@ -81,38 +81,24 @@ class AdherenceRemoteDataSourceImpl implements AdherenceRemoteDataSource {
   @override
   Future<AdherenceLogModel> logMedicationTaken(AdherenceLogModel log) async {
     try {
-      // Verify ownership
-      if (log.userId != _currentUserId) {
-        throw PermissionException(
-          message: 'You can only log medications for yourself',
-          code: 'permission_denied',
-        );
-      }
+      // Ensure the log belongs to the current user
+      final logWithUserId = AdherenceLogModel.fromEntity(
+        log.copyWith(userId: _currentUserId),
+      );
 
       final docRef = _adherenceLogsCollection.doc();
-      final now = DateTime.now();
-
-      final logWithId = AdherenceLogModel(
-        id: docRef.id,
-        userId: log.userId,
-        medicationId: log.medicationId,
-        scheduledTime: log.scheduledTime,
-        takenTime: log.takenTime ?? now,
-        status: log.status,
-        snoozeDuration: log.snoozeDuration,
-        createdAt: now,
-        deviceInfo: log.deviceInfo,
+      final logWithId = AdherenceLogModel.fromEntity(
+        logWithUserId.copyWith(id: docRef.id),
       );
 
       await docRef.set(logWithId.toDocument());
+
       return logWithId;
     } on FirebaseException catch (e) {
       throw _handleFirebaseException(e);
-    } on AppException {
-      rethrow;
     } catch (e) {
       throw DataException(
-        message: 'Failed to log medication: ${e.toString()}',
+        message: 'Failed to log medication taken: ${e.toString()}',
         code: 'log_medication_error',
       );
     }
@@ -121,30 +107,19 @@ class AdherenceRemoteDataSourceImpl implements AdherenceRemoteDataSource {
   @override
   Future<void> updateAdherenceLog(AdherenceLogModel log) async {
     try {
-      // Verify ownership
+      // Verify user ownership
       if (log.userId != _currentUserId) {
         throw PermissionException(
-          message: 'You can only update your own adherence logs',
-          code: 'permission_denied',
+          message: 'Access denied to update adherence log',
+          code: 'adherence_log_update_denied',
         );
       }
 
-      final docRef = _adherenceLogsCollection.doc(log.id);
-      final doc = await docRef.get();
-
-      if (!doc.exists) {
-        throw NotFoundException(
-          message: 'Adherence log not found',
-          code: 'adherence_log_not_found',
-        );
-      }
-
-      await docRef.update(log.toDocument());
+      await _adherenceLogsCollection.doc(log.id).update(log.toDocument());
     } on FirebaseException catch (e) {
       throw _handleFirebaseException(e);
-    } on AppException {
-      rethrow;
     } catch (e) {
+      if (e is AppException) rethrow;
       throw DataException(
         message: 'Failed to update adherence log: ${e.toString()}',
         code: 'update_adherence_log_error',
@@ -153,55 +128,62 @@ class AdherenceRemoteDataSourceImpl implements AdherenceRemoteDataSource {
   }
 
   @override
-  Future<Map<String, dynamic>> getAdherenceSummary(
-    String userId,
-    DateTime startDate,
-    DateTime endDate,
-  ) async {
+  Future<Map<String, dynamic>> getAdherenceSummary({
+    required String userId,
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
     try {
-      final logs = await getAdherenceLogs(
-        userId,
-        startDate: startDate,
-        endDate: endDate,
-      );
+      final querySnapshot = await _adherenceLogsCollection
+          .where(FirebaseConstants.userIdField, isEqualTo: userId)
+          .where(
+            FirebaseConstants.scheduledTimeField,
+            isGreaterThanOrEqualTo: Timestamp.fromDate(startDate),
+          )
+          .where(
+            FirebaseConstants.scheduledTimeField,
+            isLessThanOrEqualTo: Timestamp.fromDate(endDate),
+          )
+          .get();
 
-      final totalScheduled = logs.length;
-      final takenCount = logs
+      final logs = querySnapshot.docs
+          .map((doc) => AdherenceLogModel.fromDocument(doc))
+          .toList();
+
+      // Calculate statistics
+      final totalLogs = logs.length;
+      final takenLogs = logs
           .where((log) => log.status == AdherenceStatus.taken)
           .length;
-      final missedCount = logs
+      final missedLogs = logs
           .where((log) => log.status == AdherenceStatus.missed)
           .length;
-      final snoozedCount = logs
+      final snoozedLogs = logs
           .where((log) => log.status == AdherenceStatus.snoozed)
           .length;
 
-      final adherenceRate = totalScheduled > 0
-          ? takenCount / totalScheduled
-          : 0.0;
+      final adherenceRate = totalLogs > 0 ? takenLogs / totalLogs : 0.0;
 
-      // Calculate streak (consecutive days with taken status)
-      int streakDays = 0;
-      if (logs.isNotEmpty) {
-        final sortedLogs = List<AdherenceLogModel>.from(logs)
-          ..sort((a, b) => b.scheduledTime.compareTo(a.scheduledTime));
+      // Calculate streak
+      final sortedLogs = logs
+        ..sort((a, b) => b.scheduledTime.compareTo(a.scheduledTime));
+      int currentStreak = 0;
 
-        for (final log in sortedLogs) {
-          if (log.status == AdherenceStatus.taken) {
-            streakDays++;
-          } else {
-            break;
-          }
+      for (final log in sortedLogs) {
+        if (log.status == AdherenceStatus.taken) {
+          currentStreak++;
+        } else {
+          break;
         }
       }
 
       return {
         'adherenceRate': adherenceRate,
-        'totalScheduled': totalScheduled,
-        'takenCount': takenCount,
-        'missedCount': missedCount,
-        'snoozedCount': snoozedCount,
-        'streakDays': streakDays,
+        'totalMedications': totalLogs,
+        'takenCount': takenLogs,
+        'missedCount': missedLogs,
+        'snoozedCount': snoozedLogs,
+        'streakDays': currentStreak,
         'startDate': startDate.toIso8601String(),
         'endDate': endDate.toIso8601String(),
       };
@@ -220,23 +202,32 @@ class AdherenceRemoteDataSourceImpl implements AdherenceRemoteDataSource {
     try {
       return _adherenceLogsCollection
           .where(FirebaseConstants.userIdField, isEqualTo: userId)
-          .orderBy('scheduledTime', descending: true)
+          .orderBy(FirebaseConstants.scheduledTimeField, descending: true)
+          .limit(100) // Limit to recent logs for performance
           .snapshots()
-          .map(
-            (snapshot) => snapshot.docs
+          .map((querySnapshot) {
+            return querySnapshot.docs
                 .map((doc) => AdherenceLogModel.fromDocument(doc))
-                .toList(),
-          );
-    } on FirebaseException catch (e) {
-      throw _handleFirebaseException(e);
+                .toList();
+          })
+          .handleError((error) {
+            if (error is FirebaseException) {
+              throw _handleFirebaseException(error);
+            }
+            throw DataException(
+              message: 'Failed to watch adherence logs: ${error.toString()}',
+              code: 'watch_adherence_logs_error',
+            );
+          });
     } catch (e) {
       throw DataException(
-        message: 'Failed to watch adherence logs: ${e.toString()}',
-        code: 'watch_adherence_logs_error',
+        message: 'Failed to setup adherence logs stream: ${e.toString()}',
+        code: 'adherence_logs_stream_error',
       );
     }
   }
 
+  /// Handle Firebase exceptions and convert to custom exceptions
   AppException _handleFirebaseException(FirebaseException e) {
     switch (e.code) {
       case 'permission-denied':
@@ -244,20 +235,24 @@ class AdherenceRemoteDataSourceImpl implements AdherenceRemoteDataSource {
           message: 'Permission denied: ${e.message}',
           code: e.code,
         );
-      case 'unavailable':
-      case 'deadline-exceeded':
-        return NetworkException(
-          message: 'Network error: ${e.message}',
-          code: e.code,
-        );
       case 'not-found':
         return NotFoundException(
           message: 'Resource not found: ${e.message}',
           code: e.code,
         );
+      case 'unavailable':
+        return NetworkException(
+          message: 'Service unavailable: ${e.message}',
+          code: e.code,
+        );
+      case 'deadline-exceeded':
+        return NetworkException(
+          message: 'Request timeout: ${e.message}',
+          code: e.code,
+        );
       default:
         return FirestoreException(
-          message: e.message ?? 'Firestore error occurred',
+          message: e.message ?? 'Unknown Firestore error',
           code: e.code,
           originalCode: e.code,
         );

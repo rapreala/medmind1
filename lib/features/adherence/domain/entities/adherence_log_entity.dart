@@ -1,10 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-enum AdherenceStatus {
-  taken,
-  missed,
-  snoozed,
-}
+enum AdherenceStatus { taken, missed, snoozed }
 
 class AdherenceLogEntity extends Equatable {
   final String id;
@@ -23,7 +19,7 @@ class AdherenceLogEntity extends Equatable {
     required this.medicationId,
     required this.scheduledTime,
     this.takenTime,
-    required this.status,
+    this.status = AdherenceStatus.missed,
     this.snoozeDuration,
     required this.createdAt,
     this.deviceInfo,
@@ -55,15 +51,14 @@ class AdherenceLogEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        userId,
-        medicationId,
-        scheduledTime,
-        takenTime,
-        status,
-        snoozeDuration,
-        createdAt,
-        deviceInfo,
-      ];
+    id,
+    userId,
+    medicationId,
+    scheduledTime,
+    takenTime,
+    status,
+    snoozeDuration,
+    createdAt,
+    deviceInfo,
+  ];
 }
-

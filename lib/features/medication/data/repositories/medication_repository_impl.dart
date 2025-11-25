@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../../../core/errors/failures.dart';
 import '../../../../core/errors/exceptions.dart';
+import '../../../../core/errors/failures.dart';
 import '../../domain/entities/medication_entity.dart';
 import '../../domain/repositories/medication_repository.dart';
 import '../datasources/medication_remote_data_source.dart';
@@ -22,33 +22,15 @@ class MedicationRepositoryImpl implements MedicationRepository {
   Future<Either<Failure, List<MedicationEntity>>> getMedications() async {
     try {
       if (_currentUserId.isEmpty) {
-        return const Left(
-          AuthenticationFailure(
-            message: 'User not authenticated',
-            code: 'not_authenticated',
-          ),
-        );
+        return Left(AuthenticationFailure(message: 'User not authenticated'));
       }
 
       final medications = await remoteDataSource.getMedications(_currentUserId);
-      return Right(medications.map((model) => model.toEntity()).toList());
-    } on PermissionException catch (e) {
-      return Left(PermissionFailure(message: e.message, code: e.code));
-    } on NetworkException catch (e) {
-      return Left(NetworkFailure(message: e.message, code: e.code));
-    } on NotFoundException catch (e) {
-      return Left(DataFailure(message: e.message, code: e.code));
-    } on FirestoreException catch (e) {
-      return Left(DataFailure(message: e.message, code: e.code));
-    } on DataException catch (e) {
-      return Left(DataFailure(message: e.message, code: e.code));
+      return Right(medications);
+    } on AppException catch (e) {
+      return Left(_mapExceptionToFailure(e));
     } catch (e) {
-      return Left(
-        DataFailure(
-          message: 'Unexpected error: ${e.toString()}',
-          code: 'unexpected_error',
-        ),
-      );
+      return Left(DataFailure(message: 'Unexpected error: ${e.toString()}'));
     }
   }
 
@@ -56,33 +38,15 @@ class MedicationRepositoryImpl implements MedicationRepository {
   Future<Either<Failure, MedicationEntity>> getMedicationById(String id) async {
     try {
       if (_currentUserId.isEmpty) {
-        return const Left(
-          AuthenticationFailure(
-            message: 'User not authenticated',
-            code: 'not_authenticated',
-          ),
-        );
+        return Left(AuthenticationFailure(message: 'User not authenticated'));
       }
 
       final medication = await remoteDataSource.getMedicationById(id);
-      return Right(medication.toEntity());
-    } on PermissionException catch (e) {
-      return Left(PermissionFailure(message: e.message, code: e.code));
-    } on NetworkException catch (e) {
-      return Left(NetworkFailure(message: e.message, code: e.code));
-    } on NotFoundException catch (e) {
-      return Left(DataFailure(message: e.message, code: e.code));
-    } on FirestoreException catch (e) {
-      return Left(DataFailure(message: e.message, code: e.code));
-    } on DataException catch (e) {
-      return Left(DataFailure(message: e.message, code: e.code));
+      return Right(medication);
+    } on AppException catch (e) {
+      return Left(_mapExceptionToFailure(e));
     } catch (e) {
-      return Left(
-        DataFailure(
-          message: 'Unexpected error: ${e.toString()}',
-          code: 'unexpected_error',
-        ),
-      );
+      return Left(DataFailure(message: 'Unexpected error: ${e.toString()}'));
     }
   }
 
@@ -92,34 +56,24 @@ class MedicationRepositoryImpl implements MedicationRepository {
   ) async {
     try {
       if (_currentUserId.isEmpty) {
-        return const Left(
-          AuthenticationFailure(
-            message: 'User not authenticated',
-            code: 'not_authenticated',
-          ),
-        );
+        return Left(AuthenticationFailure(message: 'User not authenticated'));
+      }
+
+      // Validate medication data
+      final validationResult = _validateMedication(medication);
+      if (validationResult != null) {
+        return Left(validationResult);
       }
 
       final medicationModel = MedicationModel.fromEntity(medication);
       final addedMedication = await remoteDataSource.addMedication(
         medicationModel,
       );
-      return Right(addedMedication.toEntity());
-    } on PermissionException catch (e) {
-      return Left(PermissionFailure(message: e.message, code: e.code));
-    } on NetworkException catch (e) {
-      return Left(NetworkFailure(message: e.message, code: e.code));
-    } on FirestoreException catch (e) {
-      return Left(DataFailure(message: e.message, code: e.code));
-    } on DataException catch (e) {
-      return Left(DataFailure(message: e.message, code: e.code));
+      return Right(addedMedication);
+    } on AppException catch (e) {
+      return Left(_mapExceptionToFailure(e));
     } catch (e) {
-      return Left(
-        DataFailure(
-          message: 'Unexpected error: ${e.toString()}',
-          code: 'unexpected_error',
-        ),
-      );
+      return Left(DataFailure(message: 'Unexpected error: ${e.toString()}'));
     }
   }
 
@@ -129,34 +83,22 @@ class MedicationRepositoryImpl implements MedicationRepository {
   ) async {
     try {
       if (_currentUserId.isEmpty) {
-        return const Left(
-          AuthenticationFailure(
-            message: 'User not authenticated',
-            code: 'not_authenticated',
-          ),
-        );
+        return Left(AuthenticationFailure(message: 'User not authenticated'));
+      }
+
+      // Validate medication data
+      final validationResult = _validateMedication(medication);
+      if (validationResult != null) {
+        return Left(validationResult);
       }
 
       final medicationModel = MedicationModel.fromEntity(medication);
       await remoteDataSource.updateMedication(medicationModel);
       return Right(medication);
-    } on PermissionException catch (e) {
-      return Left(PermissionFailure(message: e.message, code: e.code));
-    } on NetworkException catch (e) {
-      return Left(NetworkFailure(message: e.message, code: e.code));
-    } on NotFoundException catch (e) {
-      return Left(DataFailure(message: e.message, code: e.code));
-    } on FirestoreException catch (e) {
-      return Left(DataFailure(message: e.message, code: e.code));
-    } on DataException catch (e) {
-      return Left(DataFailure(message: e.message, code: e.code));
+    } on AppException catch (e) {
+      return Left(_mapExceptionToFailure(e));
     } catch (e) {
-      return Left(
-        DataFailure(
-          message: 'Unexpected error: ${e.toString()}',
-          code: 'unexpected_error',
-        ),
-      );
+      return Left(DataFailure(message: 'Unexpected error: ${e.toString()}'));
     }
   }
 
@@ -164,62 +106,41 @@ class MedicationRepositoryImpl implements MedicationRepository {
   Future<Either<Failure, void>> deleteMedication(String id) async {
     try {
       if (_currentUserId.isEmpty) {
-        return const Left(
-          AuthenticationFailure(
-            message: 'User not authenticated',
-            code: 'not_authenticated',
-          ),
+        return Left(AuthenticationFailure(message: 'User not authenticated'));
+      }
+
+      if (id.isEmpty) {
+        return Left(
+          ValidationFailure(message: 'Medication ID cannot be empty'),
         );
       }
 
       await remoteDataSource.deleteMedication(id);
       return const Right(null);
-    } on PermissionException catch (e) {
-      return Left(PermissionFailure(message: e.message, code: e.code));
-    } on NetworkException catch (e) {
-      return Left(NetworkFailure(message: e.message, code: e.code));
-    } on NotFoundException catch (e) {
-      return Left(DataFailure(message: e.message, code: e.code));
-    } on FirestoreException catch (e) {
-      return Left(DataFailure(message: e.message, code: e.code));
-    } on DataException catch (e) {
-      return Left(DataFailure(message: e.message, code: e.code));
+    } on AppException catch (e) {
+      return Left(_mapExceptionToFailure(e));
     } catch (e) {
-      return Left(
-        DataFailure(
-          message: 'Unexpected error: ${e.toString()}',
-          code: 'unexpected_error',
-        ),
-      );
+      return Left(DataFailure(message: 'Unexpected error: ${e.toString()}'));
     }
   }
 
   @override
   Future<Either<Failure, String>> scanBarcode() async {
     try {
-      if (_currentUserId.isEmpty) {
-        return const Left(
-          AuthenticationFailure(
-            message: 'User not authenticated',
-            code: 'not_authenticated',
-          ),
-        );
-      }
+      // This is a placeholder implementation
+      // In a real app, this would integrate with a barcode scanning library
+      // and potentially lookup medication information from a database
 
-      // This should be handled by the barcode scanner widget
-      // For now, return a placeholder
-      return const Left(
-        DataFailure(
-          message: 'Barcode scanning not implemented in repository',
-          code: 'not_implemented',
-        ),
-      );
+      // For now, return a mock barcode result
+      await Future.delayed(
+        const Duration(seconds: 1),
+      ); // Simulate scanning time
+      return const Right('1234567890123'); // Mock barcode data
+    } on AppException catch (e) {
+      return Left(_mapExceptionToFailure(e));
     } catch (e) {
       return Left(
-        DataFailure(
-          message: 'Unexpected error: ${e.toString()}',
-          code: 'unexpected_error',
-        ),
+        DataFailure(message: 'Barcode scanning failed: ${e.toString()}'),
       );
     }
   }
@@ -229,54 +150,91 @@ class MedicationRepositoryImpl implements MedicationRepository {
     try {
       if (_currentUserId.isEmpty) {
         return Stream.value(
-          const Left(
-            AuthenticationFailure(
-              message: 'User not authenticated',
-              code: 'not_authenticated',
-            ),
-          ),
+          Left(AuthenticationFailure(message: 'User not authenticated')),
         );
       }
 
       return remoteDataSource
           .watchMedications(_currentUserId)
-          .map((medications) {
-            return Right(medications.map((model) => model.toEntity()).toList())
-                as Either<Failure, List<MedicationEntity>>;
-          })
+          .map<Either<Failure, List<MedicationEntity>>>(
+            (medications) => Right(medications.cast<MedicationEntity>()),
+          )
           .handleError((error) {
-            if (error is PermissionException) {
-              return Left(
-                    PermissionFailure(message: error.message, code: error.code),
-                  )
-                  as Either<Failure, List<MedicationEntity>>;
-            } else if (error is NetworkException) {
-              return Left(
-                    NetworkFailure(message: error.message, code: error.code),
-                  )
-                  as Either<Failure, List<MedicationEntity>>;
-            } else if (error is FirestoreException) {
-              return Left(DataFailure(message: error.message, code: error.code))
-                  as Either<Failure, List<MedicationEntity>>;
-            } else {
-              return Left(
-                    DataFailure(
-                      message: 'Unexpected error: ${error.toString()}',
-                      code: 'unexpected_error',
-                    ),
-                  )
-                  as Either<Failure, List<MedicationEntity>>;
+            if (error is AppException) {
+              return Left(_mapExceptionToFailure(error));
             }
+            return Left(
+              DataFailure(message: 'Stream error: ${error.toString()}'),
+            );
           });
     } catch (e) {
       return Stream.value(
-        Left(
-          DataFailure(
-            message: 'Unexpected error: ${e.toString()}',
-            code: 'unexpected_error',
-          ),
-        ),
+        Left(DataFailure(message: 'Failed to setup stream: ${e.toString()}')),
       );
+    }
+  }
+
+  /// Validate medication entity
+  ValidationFailure? _validateMedication(MedicationEntity medication) {
+    if (medication.name.trim().isEmpty) {
+      return ValidationFailure(message: 'Medication name cannot be empty');
+    }
+
+    if (medication.dosage.trim().isEmpty) {
+      return ValidationFailure(message: 'Medication dosage cannot be empty');
+    }
+
+    if (medication.times.isEmpty) {
+      return ValidationFailure(
+        message: 'At least one reminder time must be set',
+      );
+    }
+
+    if (medication.frequency == MedicationFrequency.weekly &&
+        medication.days.isEmpty) {
+      return ValidationFailure(
+        message: 'Days must be specified for weekly frequency',
+      );
+    }
+
+    if (medication.frequency == MedicationFrequency.custom &&
+        medication.days.isEmpty) {
+      return ValidationFailure(
+        message: 'Days must be specified for custom frequency',
+      );
+    }
+
+    // Validate days are in valid range (0-6 for Sun-Sat)
+    for (final day in medication.days) {
+      if (day < 0 || day > 6) {
+        return ValidationFailure(message: 'Invalid day specified: $day');
+      }
+    }
+
+    return null;
+  }
+
+  /// Map exceptions to failures
+  Failure _mapExceptionToFailure(AppException exception) {
+    switch (exception.runtimeType) {
+      case NetworkException:
+        return NetworkFailure(message: exception.message);
+      case ServerException:
+        return ServerFailure(message: exception.message);
+      case AuthenticationException:
+        return AuthenticationFailure(message: exception.message);
+      case PermissionException:
+        return PermissionFailure(message: exception.message);
+      case NotFoundException:
+        return DataFailure(message: exception.message);
+      case ValidationException:
+        return ValidationFailure(message: exception.message);
+      case FirestoreException:
+        return DataFailure(message: exception.message);
+      case DataException:
+        return DataFailure(message: exception.message);
+      default:
+        return DataFailure(message: exception.message);
     }
   }
 }

@@ -10,10 +10,14 @@ abstract class MedicationRepository {
   Future<Either<Failure, MedicationEntity>> getMedicationById(String id);
 
   /// Add a new medication
-  Future<Either<Failure, MedicationEntity>> addMedication(MedicationEntity medication);
+  Future<Either<Failure, MedicationEntity>> addMedication(
+    MedicationEntity medication,
+  );
 
   /// Update an existing medication
-  Future<Either<Failure, MedicationEntity>> updateMedication(MedicationEntity medication);
+  Future<Either<Failure, MedicationEntity>> updateMedication(
+    MedicationEntity medication,
+  );
 
   /// Delete a medication (soft delete by setting isActive = false)
   Future<Either<Failure, void>> deleteMedication(String id);
@@ -24,4 +28,3 @@ abstract class MedicationRepository {
   /// Watch medications in real-time for the current user
   Stream<Either<Failure, List<MedicationEntity>>> watchMedications();
 }
-

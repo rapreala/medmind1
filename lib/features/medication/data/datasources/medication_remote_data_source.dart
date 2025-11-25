@@ -53,31 +53,30 @@ class MedicationRemoteDataSourceImpl implements MedicationRemoteDataSource {
   @override
   Future<MedicationModel> getMedicationById(String id) async {
     try {
-      final doc = await _medicationsCollection.doc(id).get();
+      final docSnapshot = await _medicationsCollection.doc(id).get();
 
-      if (!doc.exists) {
+      if (!docSnapshot.exists) {
         throw NotFoundException(
-          message: 'Medication not found',
+          message: 'Medication with ID $id not found',
           code: 'medication_not_found',
         );
       }
 
-      final medication = MedicationModel.fromDocument(doc);
+      final medication = MedicationModel.fromDocument(docSnapshot);
 
-      // Verify ownership
+      // Verify user ownership
       if (medication.userId != _currentUserId) {
         throw PermissionException(
-          message: 'You do not have permission to access this medication',
-          code: 'permission_denied',
+          message: 'Access denied to medication',
+          code: 'medication_access_denied',
         );
       }
 
       return medication;
     } on FirebaseException catch (e) {
       throw _handleFirebaseException(e);
-    } on AppException {
-      rethrow;
     } catch (e) {
+      if (e is AppException) rethrow;
       throw DataException(
         message: 'Failed to get medication: ${e.toString()}',
         code: 'get_medication_error',
@@ -88,41 +87,21 @@ class MedicationRemoteDataSourceImpl implements MedicationRemoteDataSource {
   @override
   Future<MedicationModel> addMedication(MedicationModel medication) async {
     try {
-      // Verify ownership
-      if (medication.userId != _currentUserId) {
-        throw PermissionException(
-          message: 'You can only add medications for yourself',
-          code: 'permission_denied',
-        );
-      }
+      // Ensure the medication belongs to the current user
+      final medicationWithUserId = MedicationModel.fromEntity(
+        medication.copyWith(userId: _currentUserId),
+      );
 
       final docRef = _medicationsCollection.doc();
-      final now = DateTime.now();
-
-      final medicationWithId = MedicationModel(
-        id: docRef.id,
-        userId: medication.userId,
-        name: medication.name,
-        dosage: medication.dosage,
-        form: medication.form,
-        frequency: medication.frequency,
-        times: medication.times,
-        days: medication.days,
-        startDate: medication.startDate,
-        isActive: medication.isActive,
-        barcodeData: medication.barcodeData,
-        refillReminder: medication.refillReminder,
-        instructions: medication.instructions,
-        createdAt: now,
-        updatedAt: now,
+      final medicationWithId = MedicationModel.fromEntity(
+        medicationWithUserId.copyWith(id: docRef.id),
       );
 
       await docRef.set(medicationWithId.toDocument());
+
       return medicationWithId;
     } on FirebaseException catch (e) {
       throw _handleFirebaseException(e);
-    } on AppException {
-      rethrow;
     } catch (e) {
       throw DataException(
         message: 'Failed to add medication: ${e.toString()}',
@@ -134,48 +113,26 @@ class MedicationRemoteDataSourceImpl implements MedicationRemoteDataSource {
   @override
   Future<void> updateMedication(MedicationModel medication) async {
     try {
-      // Verify ownership
+      // Verify user ownership
       if (medication.userId != _currentUserId) {
         throw PermissionException(
-          message: 'You can only update your own medications',
-          code: 'permission_denied',
+          message: 'Access denied to update medication',
+          code: 'medication_update_denied',
         );
       }
 
-      final docRef = _medicationsCollection.doc(medication.id);
-      final doc = await docRef.get();
-
-      if (!doc.exists) {
-        throw NotFoundException(
-          message: 'Medication not found',
-          code: 'medication_not_found',
-        );
-      }
-
-      final updatedMedication = MedicationModel(
-        id: medication.id,
-        userId: medication.userId,
-        name: medication.name,
-        dosage: medication.dosage,
-        form: medication.form,
-        frequency: medication.frequency,
-        times: medication.times,
-        days: medication.days,
-        startDate: medication.startDate,
-        isActive: medication.isActive,
-        barcodeData: medication.barcodeData,
-        refillReminder: medication.refillReminder,
-        instructions: medication.instructions,
-        createdAt: medication.createdAt,
-        updatedAt: DateTime.now(),
+      // Update the updatedAt timestamp
+      final updatedMedication = MedicationModel.fromEntity(
+        medication.copyWith(updatedAt: DateTime.now()),
       );
 
-      await docRef.update(updatedMedication.toDocument());
+      await _medicationsCollection
+          .doc(medication.id)
+          .update(updatedMedication.toDocument());
     } on FirebaseException catch (e) {
       throw _handleFirebaseException(e);
-    } on AppException {
-      rethrow;
     } catch (e) {
+      if (e is AppException) rethrow;
       throw DataException(
         message: 'Failed to update medication: ${e.toString()}',
         code: 'update_medication_error',
@@ -186,36 +143,21 @@ class MedicationRemoteDataSourceImpl implements MedicationRemoteDataSource {
   @override
   Future<void> deleteMedication(String id) async {
     try {
-      final docRef = _medicationsCollection.doc(id);
-      final doc = await docRef.get();
+      // First verify the medication exists and user owns it
+      final medication = await getMedicationById(id);
 
-      if (!doc.exists) {
-        throw NotFoundException(
-          message: 'Medication not found',
-          code: 'medication_not_found',
-        );
-      }
+      // Soft delete by setting isActive to false
+      final updatedMedication = MedicationModel.fromEntity(
+        medication.copyWith(isActive: false, updatedAt: DateTime.now()),
+      );
 
-      final medication = MedicationModel.fromDocument(doc);
-
-      // Verify ownership
-      if (medication.userId != _currentUserId) {
-        throw PermissionException(
-          message: 'You can only delete your own medications',
-          code: 'permission_denied',
-        );
-      }
-
-      // Soft delete by setting isActive = false
-      await docRef.update({
-        FirebaseConstants.isActiveField: false,
-        FirebaseConstants.updatedAtField: FieldValue.serverTimestamp(),
-      });
+      await _medicationsCollection
+          .doc(id)
+          .update(updatedMedication.toDocument());
     } on FirebaseException catch (e) {
       throw _handleFirebaseException(e);
-    } on AppException {
-      rethrow;
     } catch (e) {
+      if (e is AppException) rethrow;
       throw DataException(
         message: 'Failed to delete medication: ${e.toString()}',
         code: 'delete_medication_error',
@@ -227,9 +169,7 @@ class MedicationRemoteDataSourceImpl implements MedicationRemoteDataSource {
   Future<MedicationModel?> lookupBarcode(String barcodeData) async {
     try {
       final querySnapshot = await _medicationsCollection
-          .where('barcodeData', isEqualTo: barcodeData)
-          .where(FirebaseConstants.userIdField, isEqualTo: _currentUserId)
-          .where(FirebaseConstants.isActiveField, isEqualTo: true)
+          .where(FirebaseConstants.barcodeDataField, isEqualTo: barcodeData)
           .limit(1)
           .get();
 
@@ -256,21 +196,29 @@ class MedicationRemoteDataSourceImpl implements MedicationRemoteDataSource {
           .where(FirebaseConstants.isActiveField, isEqualTo: true)
           .orderBy(FirebaseConstants.createdAtField, descending: true)
           .snapshots()
-          .map(
-            (snapshot) => snapshot.docs
+          .map((querySnapshot) {
+            return querySnapshot.docs
                 .map((doc) => MedicationModel.fromDocument(doc))
-                .toList(),
-          );
-    } on FirebaseException catch (e) {
-      throw _handleFirebaseException(e);
+                .toList();
+          })
+          .handleError((error) {
+            if (error is FirebaseException) {
+              throw _handleFirebaseException(error);
+            }
+            throw DataException(
+              message: 'Failed to watch medications: ${error.toString()}',
+              code: 'watch_medications_error',
+            );
+          });
     } catch (e) {
       throw DataException(
-        message: 'Failed to watch medications: ${e.toString()}',
-        code: 'watch_medications_error',
+        message: 'Failed to setup medications stream: ${e.toString()}',
+        code: 'medications_stream_error',
       );
     }
   }
 
+  /// Handle Firebase exceptions and convert to custom exceptions
   AppException _handleFirebaseException(FirebaseException e) {
     switch (e.code) {
       case 'permission-denied':
@@ -278,20 +226,24 @@ class MedicationRemoteDataSourceImpl implements MedicationRemoteDataSource {
           message: 'Permission denied: ${e.message}',
           code: e.code,
         );
-      case 'unavailable':
-      case 'deadline-exceeded':
-        return NetworkException(
-          message: 'Network error: ${e.message}',
-          code: e.code,
-        );
       case 'not-found':
         return NotFoundException(
           message: 'Resource not found: ${e.message}',
           code: e.code,
         );
+      case 'unavailable':
+        return NetworkException(
+          message: 'Service unavailable: ${e.message}',
+          code: e.code,
+        );
+      case 'deadline-exceeded':
+        return NetworkException(
+          message: 'Request timeout: ${e.message}',
+          code: e.code,
+        );
       default:
         return FirestoreException(
-          message: e.message ?? 'Firestore error occurred',
+          message: e.message ?? 'Unknown Firestore error',
           code: e.code,
           originalCode: e.code,
         );

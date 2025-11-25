@@ -1,18 +1,9 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 
-enum MedicationForm {
-  tablet,
-  capsule,
-  liquid,
-  injection,
-}
+enum MedicationForm { tablet, capsule, liquid, injection }
 
-enum MedicationFrequency {
-  daily,
-  weekly,
-  custom,
-}
+enum MedicationFrequency { daily, weekly, custom }
 
 class MedicationEntity extends Equatable {
   final String id;
@@ -87,21 +78,20 @@ class MedicationEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        userId,
-        name,
-        dosage,
-        form,
-        frequency,
-        times,
-        days,
-        startDate,
-        isActive,
-        barcodeData,
-        refillReminder,
-        instructions,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    userId,
+    name,
+    dosage,
+    form,
+    frequency,
+    times,
+    days,
+    startDate,
+    isActive,
+    barcodeData,
+    refillReminder,
+    instructions,
+    createdAt,
+    updatedAt,
+  ];
 }
-

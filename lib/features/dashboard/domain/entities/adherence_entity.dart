@@ -14,7 +14,12 @@ class WeeklyStats extends Equatable {
   });
 
   @override
-  List<Object?> get props => [weekNumber, adherenceRate, takenCount, missedCount];
+  List<Object?> get props => [
+    weekNumber,
+    adherenceRate,
+    takenCount,
+    missedCount,
+  ];
 }
 
 class MonthlyStats extends Equatable {
@@ -33,7 +38,13 @@ class MonthlyStats extends Equatable {
   });
 
   @override
-  List<Object?> get props => [month, year, adherenceRate, takenCount, missedCount];
+  List<Object?> get props => [
+    month,
+    year,
+    adherenceRate,
+    takenCount,
+    missedCount,
+  ];
 }
 
 class AdherenceEntity extends Equatable {
@@ -50,9 +61,9 @@ class AdherenceEntity extends Equatable {
     required this.totalMedications,
     required this.takenCount,
     required this.missedCount,
-    required this.weeklyStats,
-    required this.monthlyStats,
-    required this.streakDays,
+    this.weeklyStats = const [],
+    this.monthlyStats = const [],
+    this.streakDays = 0,
   });
 
   AdherenceEntity copyWith({
@@ -77,13 +88,12 @@ class AdherenceEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        adherenceRate,
-        totalMedications,
-        takenCount,
-        missedCount,
-        weeklyStats,
-        monthlyStats,
-        streakDays,
-      ];
+    adherenceRate,
+    totalMedications,
+    takenCount,
+    missedCount,
+    weeklyStats,
+    monthlyStats,
+    streakDays,
+  ];
 }
-

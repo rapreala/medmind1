@@ -6,9 +6,9 @@ class AdherenceModel extends AdherenceEntity {
     required super.totalMedications,
     required super.takenCount,
     required super.missedCount,
-    required super.weeklyStats,
-    required super.monthlyStats,
-    required super.streakDays,
+    super.weeklyStats,
+    super.monthlyStats,
+    super.streakDays,
   });
 
   /// Convert entity to model
@@ -31,54 +31,74 @@ class AdherenceModel extends AdherenceEntity {
       'totalMedications': totalMedications,
       'takenCount': takenCount,
       'missedCount': missedCount,
-      'weeklyStats': weeklyStats.map((s) => {
-            'weekNumber': s.weekNumber,
-            'adherenceRate': s.adherenceRate,
-            'takenCount': s.takenCount,
-            'missedCount': s.missedCount,
-          }).toList(),
-      'monthlyStats': monthlyStats.map((s) => {
-            'month': s.month,
-            'year': s.year,
-            'adherenceRate': s.adherenceRate,
-            'takenCount': s.takenCount,
-            'missedCount': s.missedCount,
-          }).toList(),
+      'weeklyStats': weeklyStats
+          .map(
+            (s) => {
+              'weekNumber': s.weekNumber,
+              'adherenceRate': s.adherenceRate,
+              'takenCount': s.takenCount,
+              'missedCount': s.missedCount,
+            },
+          )
+          .toList(),
+      'monthlyStats': monthlyStats
+          .map(
+            (s) => {
+              'month': s.month,
+              'year': s.year,
+              'adherenceRate': s.adherenceRate,
+              'takenCount': s.takenCount,
+              'missedCount': s.missedCount,
+            },
+          )
+          .toList(),
       'streakDays': streakDays,
     };
   }
 
-  /// Convert from JSON
+  /// Convert from JSON (for caching)
   factory AdherenceModel.fromJson(Map<String, dynamic> json) {
     return AdherenceModel(
       adherenceRate: (json['adherenceRate'] as num).toDouble(),
       totalMedications: json['totalMedications'] as int,
       takenCount: json['takenCount'] as int,
       missedCount: json['missedCount'] as int,
-      weeklyStats: (json['weeklyStats'] as List)
-          .map((s) => WeeklyStats(
-                weekNumber: s['weekNumber'] as int,
-                adherenceRate: (s['adherenceRate'] as num).toDouble(),
-                takenCount: s['takenCount'] as int,
-                missedCount: s['missedCount'] as int,
-              ))
+      weeklyStats: (json['weeklyStats'] as List<dynamic>)
+          .map(
+            (s) => WeeklyStats(
+              weekNumber: s['weekNumber'] as int,
+              adherenceRate: (s['adherenceRate'] as num).toDouble(),
+              takenCount: s['takenCount'] as int,
+              missedCount: s['missedCount'] as int,
+            ),
+          )
           .toList(),
-      monthlyStats: (json['monthlyStats'] as List)
-          .map((s) => MonthlyStats(
-                month: s['month'] as int,
-                year: s['year'] as int,
-                adherenceRate: (s['adherenceRate'] as num).toDouble(),
-                takenCount: s['takenCount'] as int,
-                missedCount: s['missedCount'] as int,
-              ))
+      monthlyStats: (json['monthlyStats'] as List<dynamic>)
+          .map(
+            (s) => MonthlyStats(
+              month: s['month'] as int,
+              year: s['year'] as int,
+              adherenceRate: (s['adherenceRate'] as num).toDouble(),
+              takenCount: s['takenCount'] as int,
+              missedCount: s['missedCount'] as int,
+            ),
+          )
           .toList(),
       streakDays: json['streakDays'] as int,
     );
   }
 
-  /// Convert entity to model
-  AdherenceEntity toEntity() {
-    return AdherenceEntity(
+  /// Create from aggregated data (used in data sources)
+  factory AdherenceModel.fromAggregatedData({
+    required double adherenceRate,
+    required int totalMedications,
+    required int takenCount,
+    required int missedCount,
+    List<WeeklyStats> weeklyStats = const [],
+    List<MonthlyStats> monthlyStats = const [],
+    int streakDays = 0,
+  }) {
+    return AdherenceModel(
       adherenceRate: adherenceRate,
       totalMedications: totalMedications,
       takenCount: takenCount,
@@ -89,4 +109,3 @@ class AdherenceModel extends AdherenceEntity {
     );
   }
 }
-

@@ -99,19 +99,19 @@ class MedicationModel extends MedicationEntity {
       'dosage': dosage,
       'form': form.name,
       'frequency': frequency.name,
-      'times': times.map((t) => '${t.hour}:${t.minute}').toList(),
+      'times': times.map((time) => '${time.hour}:${time.minute}').toList(),
       'days': days,
       'startDate': startDate.toIso8601String(),
       'isActive': isActive,
-      'barcodeData': barcodeData,
+      if (barcodeData != null) 'barcodeData': barcodeData,
       'refillReminder': refillReminder,
-      'instructions': instructions,
+      if (instructions != null) 'instructions': instructions,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
   }
 
-  /// Convert from JSON
+  /// Convert from JSON (for local storage/caching)
   factory MedicationModel.fromJson(Map<String, dynamic> json) {
     return MedicationModel(
       id: json['id'] as String,
@@ -126,10 +126,10 @@ class MedicationModel extends MedicationEntity {
         (e) => e.name == json['frequency'],
         orElse: () => MedicationFrequency.daily,
       ),
-      times: (json['times'] as List)
-          .map((t) => _timeFromString(t as String))
+      times: (json['times'] as List<dynamic>)
+          .map((timeStr) => _timeFromString(timeStr as String))
           .toList(),
-      days: List<int>.from(json['days']),
+      days: List<int>.from(json['days'] ?? []),
       startDate: DateTime.parse(json['startDate'] as String),
       isActive: json['isActive'] as bool? ?? true,
       barcodeData: json['barcodeData'] as String?,
@@ -140,56 +140,27 @@ class MedicationModel extends MedicationEntity {
     );
   }
 
-  /// Convert entity to model
-  MedicationEntity toEntity() {
-    return MedicationEntity(
-      id: id,
-      userId: userId,
-      name: name,
-      dosage: dosage,
-      form: form,
-      frequency: frequency,
-      times: times,
-      days: days,
-      startDate: startDate,
-      isActive: isActive,
-      barcodeData: barcodeData,
-      refillReminder: refillReminder,
-      instructions: instructions,
-      createdAt: createdAt,
-      updatedAt: updatedAt,
-    );
-  }
-
-  /// Helper: Convert TimeOfDay list to Firestore format
+  /// Helper method to convert TimeOfDay list to Firestore format
   static List<Map<String, int>> _timesToFirestore(List<TimeOfDay> times) {
-    return times.map((time) => {'hour': time.hour, 'minute': time.minute}).toList();
+    return times
+        .map((time) => {'hour': time.hour, 'minute': time.minute})
+        .toList();
   }
 
-  /// Helper: Convert Firestore format to TimeOfDay list
-  static List<TimeOfDay> _timesFromFirestore(dynamic data) {
-    if (data == null) return [];
-    if (data is List) {
-      return data.map((item) {
-        if (item is Map) {
-          return TimeOfDay(
-            hour: item['hour'] as int,
-            minute: item['minute'] as int,
-          );
-        }
-        return const TimeOfDay(hour: 8, minute: 0);
-      }).toList();
-    }
-    return [];
+  /// Helper method to convert Firestore format to TimeOfDay list
+  static List<TimeOfDay> _timesFromFirestore(dynamic timesData) {
+    if (timesData == null) return [];
+
+    final timesList = timesData as List<dynamic>;
+    return timesList.map((timeMap) {
+      final map = timeMap as Map<String, dynamic>;
+      return TimeOfDay(hour: map['hour'] as int, minute: map['minute'] as int);
+    }).toList();
   }
 
-  /// Helper: Convert time string to TimeOfDay
+  /// Helper method to convert string to TimeOfDay
   static TimeOfDay _timeFromString(String timeStr) {
     final parts = timeStr.split(':');
-    return TimeOfDay(
-      hour: int.parse(parts[0]),
-      minute: int.parse(parts[1]),
-    );
+    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
   }
 }
-
