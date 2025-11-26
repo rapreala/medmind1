@@ -15,24 +15,68 @@ import 'features/auth/presentation/blocs/auth_event.dart';
 import 'features/auth/presentation/blocs/auth_state.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/auth/presentation/pages/register_page.dart';
+
+// Feature imports - Dashboard
 import 'features/dashboard/presentation/pages/dashboard_page.dart';
+import 'features/dashboard/presentation/blocs/dashboard_bloc/dashboard_bloc.dart';
+
+// Feature imports - Medication
+import 'features/medication/presentation/pages/medication_list_page.dart';
+import 'features/medication/presentation/pages/add_medication_page.dart';
+import 'features/medication/presentation/pages/medication_detail_page.dart';
+import 'features/medication/presentation/blocs/medication_bloc/medication_bloc.dart';
+
+// Feature imports - Adherence
+import 'features/adherence/presentation/pages/adherence_history_page.dart';
+import 'features/adherence/presentation/pages/adherence_analytics_page.dart';
+import 'features/adherence/presentation/blocs/adherence_bloc/adherence_bloc.dart';
+
+// Feature imports - Profile
+import 'features/profile/presentation/pages/profile_page.dart';
+import 'features/profile/presentation/blocs/profile_bloc/profile_bloc.dart';
 
 // Repository implementations
 import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/medication/data/repositories/medication_repository_impl.dart';
 import 'features/adherence/data/repositories/adherence_repository_impl.dart';
 import 'features/dashboard/data/repositories/dashboard_repository_impl.dart';
+import 'features/profile/data/repositories/profile_repository_impl.dart';
 
 // Data sources
 import 'features/medication/data/datasources/medication_remote_data_source.dart';
 import 'features/adherence/data/datasources/adherence_remote_data_source.dart';
 import 'features/dashboard/data/datasources/dashboard_remote_data_source.dart';
+import 'features/profile/data/datasources/profile_local_data_source.dart';
 
-// Use cases
+// Use cases - Auth
 import 'features/auth/domain/usecases/sign_in_with_email_and_password.dart';
 import 'features/auth/domain/usecases/sign_in_with_google.dart';
 import 'features/auth/domain/usecases/sign_up.dart';
 import 'features/auth/domain/usecases/sign_out.dart';
+
+// Use cases - Dashboard
+import 'features/dashboard/domain/usecases/get_today_medications.dart';
+import 'features/dashboard/domain/usecases/get_adherence_stats.dart';
+import 'features/dashboard/domain/usecases/log_medication_taken.dart';
+
+// Use cases - Medication
+import 'features/medication/domain/usecases/get_medications.dart';
+import 'features/medication/domain/usecases/add_medication.dart';
+import 'features/medication/domain/usecases/update_medication.dart';
+import 'features/medication/domain/usecases/delete_medication.dart';
+
+// Use cases - Adherence
+import 'features/adherence/domain/usecases/get_adherence_logs.dart';
+import 'features/adherence/domain/usecases/get_adherence_summary.dart';
+import 'features/adherence/domain/usecases/log_medication_taken.dart'
+    as adherence_log;
+import 'features/adherence/domain/usecases/export_adherence_data.dart';
+
+// Use cases - Profile
+import 'features/profile/domain/usecases/get_user_preferences.dart';
+import 'features/profile/domain/usecases/save_user_preferences.dart';
+import 'features/profile/domain/usecases/update_theme_mode.dart';
+import 'features/profile/domain/usecases/update_notifications.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -110,6 +154,13 @@ class MedMindApp extends StatelessWidget {
             firebaseAuth: FirebaseAuth.instance,
           ),
         ),
+        RepositoryProvider<ProfileRepositoryImpl>(
+          create: (context) => ProfileRepositoryImpl(
+            localDataSource: ProfileLocalDataSourceImpl(
+              sharedPreferences: sharedPreferences,
+            ),
+          ),
+        ),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -126,6 +177,51 @@ class MedMindApp extends StatelessWidget {
               )..add(AuthCheckRequested());
             },
           ),
+          BlocProvider<DashboardBloc>(
+            create: (context) {
+              final dashboardRepo = context.read<DashboardRepositoryImpl>();
+              return DashboardBloc(
+                getTodayMedications: GetTodayMedications(dashboardRepo),
+                getAdherenceStats: GetAdherenceStats(dashboardRepo),
+                logMedicationTaken: LogMedicationTaken(dashboardRepo),
+              );
+            },
+          ),
+          BlocProvider<MedicationBloc>(
+            create: (context) {
+              final medicationRepo = context.read<MedicationRepositoryImpl>();
+              return MedicationBloc(
+                getMedications: GetMedications(medicationRepo),
+                addMedication: AddMedication(medicationRepo),
+                updateMedication: UpdateMedication(medicationRepo),
+                deleteMedication: DeleteMedication(medicationRepo),
+              );
+            },
+          ),
+          BlocProvider<AdherenceBloc>(
+            create: (context) {
+              final adherenceRepo = context.read<AdherenceRepositoryImpl>();
+              return AdherenceBloc(
+                getAdherenceLogs: GetAdherenceLogs(adherenceRepo),
+                getAdherenceSummary: GetAdherenceSummary(adherenceRepo),
+                logMedicationTaken: adherence_log.LogMedicationTaken(
+                  adherenceRepo,
+                ),
+                exportAdherenceData: ExportAdherenceData(adherenceRepo),
+              );
+            },
+          ),
+          BlocProvider<ProfileBloc>(
+            create: (context) {
+              final profileRepo = context.read<ProfileRepositoryImpl>();
+              return ProfileBloc(
+                getUserPreferences: GetUserPreferences(profileRepo),
+                saveUserPreferences: SaveUserPreferences(profileRepo),
+                updateThemeMode: UpdateThemeMode(profileRepo),
+                updateNotifications: UpdateNotifications(profileRepo),
+              );
+            },
+          ),
         ],
         child: MaterialApp(
           title: 'MedMind',
@@ -139,6 +235,7 @@ class MedMindApp extends StatelessWidget {
           onGenerateRoute: (settings) {
             // Handle navigation routes
             switch (settings.name) {
+              // Auth routes
               case '/login':
                 return MaterialPageRoute(builder: (_) => const LoginPage());
               case '/register':
@@ -158,8 +255,76 @@ class MedMindApp extends StatelessWidget {
                     ),
                   ),
                 );
+
+              // Dashboard route
               case '/dashboard':
                 return MaterialPageRoute(builder: (_) => const DashboardPage());
+
+              // Medication routes
+              case '/medications':
+                return MaterialPageRoute(
+                  builder: (_) => const MedicationListPage(),
+                );
+              case '/add-medication':
+                return MaterialPageRoute(
+                  builder: (_) => const AddMedicationPage(),
+                );
+              case '/medication-detail':
+                final medication = settings.arguments;
+                if (medication != null) {
+                  return MaterialPageRoute(
+                    builder: (_) =>
+                        MedicationDetailPage(medication: medication as dynamic),
+                  );
+                }
+                return null;
+
+              // Adherence routes
+              case '/adherence-history':
+                return MaterialPageRoute(
+                  builder: (_) => const AdherenceHistoryPage(),
+                );
+              case '/adherence-analytics':
+                return MaterialPageRoute(
+                  builder: (_) => const AdherenceAnalyticsPage(),
+                );
+
+              // Profile routes
+              case '/profile':
+                return MaterialPageRoute(builder: (_) => const ProfilePage());
+              case '/settings':
+                return MaterialPageRoute(
+                  builder: (_) => Scaffold(
+                    appBar: AppBar(title: const Text('Settings')),
+                    body: const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24.0),
+                        child: Text(
+                          'Settings page coming soon!',
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+
+              // Notifications placeholder
+              case '/notifications':
+                return MaterialPageRoute(
+                  builder: (_) => Scaffold(
+                    appBar: AppBar(title: const Text('Notifications')),
+                    body: const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24.0),
+                        child: Text(
+                          'Notifications page coming soon!',
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+
               default:
                 return null;
             }
