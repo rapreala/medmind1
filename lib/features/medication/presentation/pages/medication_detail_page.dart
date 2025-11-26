@@ -4,6 +4,9 @@ import '../blocs/medication_bloc/medication_bloc.dart';
 import '../blocs/medication_bloc/medication_event.dart';
 import '../blocs/medication_bloc/medication_state.dart';
 import '../../domain/entities/medication_entity.dart';
+import '../../../adherence/domain/entities/adherence_log_entity.dart';
+import '../../../adherence/presentation/blocs/adherence_bloc/adherence_bloc.dart';
+import '../../../adherence/presentation/blocs/adherence_bloc/adherence_event.dart';
 
 class MedicationDetailPage extends StatelessWidget {
   final MedicationEntity medication;
@@ -168,9 +171,27 @@ class MedicationDetailPage extends StatelessWidget {
       children: [
         ElevatedButton.icon(
           onPressed: () {
-            // Log medication taken
+            print('🔔 [MedicationDetail] Mark as taken button pressed for: ${medication.name}');
+            
+            final now = DateTime.now();
+            final log = AdherenceLogEntity(
+              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              medicationId: medication.id,
+              userId: '',
+              scheduledTime: now,
+              takenTime: now,
+              status: AdherenceStatus.taken,
+              createdAt: now,
+            );
+
+            context.read<AdherenceBloc>().add(LogMedicationTakenEvent(log: log));
+            
+            print('✅ [MedicationDetail] Medication logged as taken');
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Medication logged as taken')),
+              SnackBar(
+                content: Text('${medication.name} marked as taken'),
+                backgroundColor: Colors.green,
+              ),
             );
           },
           icon: const Icon(Icons.check),

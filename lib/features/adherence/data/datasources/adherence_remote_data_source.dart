@@ -81,6 +81,10 @@ class AdherenceRemoteDataSourceImpl implements AdherenceRemoteDataSource {
   @override
   Future<AdherenceLogModel> logMedicationTaken(AdherenceLogModel log) async {
     try {
+      print('💊 [AdherenceDataSource] Logging medication taken...');
+      print('   Medication ID: ${log.medicationId}');
+      print('   Status: ${log.status}');
+      
       // Ensure the log belongs to the current user
       final logWithUserId = AdherenceLogModel.fromEntity(
         log.copyWith(userId: _currentUserId),
@@ -91,12 +95,16 @@ class AdherenceRemoteDataSourceImpl implements AdherenceRemoteDataSource {
         logWithUserId.copyWith(id: docRef.id),
       );
 
+      print('   Saving to Firestore with ID: ${docRef.id}');
       await docRef.set(logWithId.toDocument());
 
+      print('✅ [AdherenceDataSource] Medication log saved successfully');
       return logWithId;
     } on FirebaseException catch (e) {
+      print('❌ [AdherenceDataSource] Firebase error: ${e.message}');
       throw _handleFirebaseException(e);
     } catch (e) {
+      print('❌ [AdherenceDataSource] Error: $e');
       throw DataException(
         message: 'Failed to log medication taken: ${e.toString()}',
         code: 'log_medication_error',

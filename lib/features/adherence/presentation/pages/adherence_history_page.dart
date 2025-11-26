@@ -4,6 +4,7 @@ import '../blocs/adherence_bloc/adherence_bloc.dart';
 import '../blocs/adherence_bloc/adherence_event.dart';
 import '../blocs/adherence_bloc/adherence_state.dart';
 import '../widgets/adherence_calendar.dart';
+import '../../domain/entities/adherence_log_entity.dart' as entities;
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/error_widget.dart';
 
@@ -219,22 +220,133 @@ class _AdherenceHistoryPageState extends State<AdherenceHistoryPage> {
   }
 
   void _showDayDetails(BuildContext context, DateTime date, List<dynamic> logs) {
+    print('📅 Showing details for date: ${date.year}-${date.month}-${date.day}');
+    print('📅 Total logs received: ${logs.length}');
+    
+    // Filter logs for the selected date
+    final logsForDay = logs.where((log) {
+      if (log is! entities.AdherenceLogEntity) return false;
+      final logDate = log.scheduledTime;
+      return logDate.year == date.year &&
+             logDate.month == date.month &&
+             logDate.day == date.day;
+    }).cast<entities.AdherenceLogEntity>().toList();
+    
+    print('📅 Logs for selected day: ${logsForDay.length}');
+    
     showModalBottomSheet(
       context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+      isScrollControlled: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.5,
+        minChildSize: 0.3,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (context, scrollController) => Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Adherence for ${date.day}/${date.month}/${date.year}',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              
+              // Content
+              Expanded(
+                child: logsForDay.isEmpty
+                  ? const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.calendar_today, size: 48, color: Colors.grey),
+                          SizedBox(height: 16),
+                          Text(
+                            'No medications logged for this day',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: scrollController,
+                      itemCount: logsForDay.length,
+                      itemBuilder: (context, index) {
+                        final log = logsForDay[index];
+                        return _buildLogItem(context, log);
+                      },
+                    ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogItem(BuildContext context, entities.AdherenceLogEntity log) {
+    // Determine icon and color based on status
+    IconData icon;
+    Color iconColor;
+    String statusText;
+    
+    switch (log.status) {
+      case entities.AdherenceStatus.taken:
+        icon = Icons.check_circle;
+        iconColor = Colors.green;
+        statusText = 'Taken';
+        break;
+      case entities.AdherenceStatus.missed:
+        icon = Icons.cancel;
+        iconColor = Colors.red;
+        statusText = 'Missed';
+        break;
+      case entities.AdherenceStatus.snoozed:
+        icon = Icons.snooze;
+        iconColor = Colors.orange;
+        statusText = 'Snoozed';
+        break;
+    }
+    
+    // Format times
+    final scheduledTimeStr = '${log.scheduledTime.hour.toString().padLeft(2, '0')}:${log.scheduledTime.minute.toString().padLeft(2, '0')}';
+    final takenTimeStr = log.takenTime != null
+        ? '${log.takenTime!.hour.toString().padLeft(2, '0')}:${log.takenTime!.minute.toString().padLeft(2, '0')}'
+        : null;
+    
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: Icon(icon, color: iconColor, size: 32),
+        title: Text(
+          'Medication ID: ${log.medicationId.substring(0, 8)}...',
+          style: const TextStyle(fontWeight: FontWeight.w500),
+        ),
+        subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Adherence for ${date.day}/${date.month}/${date.year}',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 16),
-            const Text('Medications taken on this day will be shown here'),
+            const SizedBox(height: 4),
+            Text('Status: $statusText'),
+            Text('Scheduled: $scheduledTimeStr'),
+            if (takenTimeStr != null) Text('Taken at: $takenTimeStr'),
+            if (log.snoozeDuration != null) Text('Snoozed for: ${log.snoozeDuration} min'),
           ],
         ),
+        isThreeLine: true,
       ),
     );
   }

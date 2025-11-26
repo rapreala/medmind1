@@ -157,7 +157,7 @@ class _AdherenceAnalyticsPageState extends State<AdherenceAnalyticsPage> {
               child: _buildMetricCard(
                 context,
                 'Overall Adherence',
-                '85%',
+                '${(state.overallAdherence * 100).toStringAsFixed(0)}%',
                 Icons.trending_up,
                 Colors.green,
               ),
@@ -167,7 +167,7 @@ class _AdherenceAnalyticsPageState extends State<AdherenceAnalyticsPage> {
               child: _buildMetricCard(
                 context,
                 'Current Streak',
-                '12 days',
+                '${state.currentStreak} days',
                 Icons.local_fire_department,
                 Colors.orange,
               ),
@@ -181,7 +181,7 @@ class _AdherenceAnalyticsPageState extends State<AdherenceAnalyticsPage> {
               child: _buildMetricCard(
                 context,
                 'Best Streak',
-                '28 days',
+                '${state.bestStreak} days',
                 Icons.emoji_events,
                 Colors.amber,
               ),
@@ -191,7 +191,7 @@ class _AdherenceAnalyticsPageState extends State<AdherenceAnalyticsPage> {
               child: _buildMetricCard(
                 context,
                 'Missed Doses',
-                '3',
+                '${state.missedDoses}',
                 Icons.warning_outlined,
                 Colors.red,
               ),
@@ -235,6 +235,9 @@ class _AdherenceAnalyticsPageState extends State<AdherenceAnalyticsPage> {
   }
 
   Widget _buildInsights(BuildContext context, AdherenceSummaryLoaded state) {
+    final adherencePercent = (state.overallAdherence * 100).toStringAsFixed(0);
+    final isGoodAdherence = state.overallAdherence >= 0.8;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -254,9 +257,9 @@ class _AdherenceAnalyticsPageState extends State<AdherenceAnalyticsPage> {
                 _buildInsightItem(
                   context,
                   Icons.lightbulb_outline,
-                  'Great Progress!',
-                  'You\'ve maintained an 85% adherence rate this month.',
-                  Colors.green,
+                  isGoodAdherence ? 'Great Progress!' : 'Keep Trying!',
+                  'You\'ve maintained a $adherencePercent% adherence rate this month.',
+                  isGoodAdherence ? Colors.green : Colors.orange,
                 ),
                 const Divider(),
                 _buildInsightItem(
@@ -266,14 +269,16 @@ class _AdherenceAnalyticsPageState extends State<AdherenceAnalyticsPage> {
                   'Try to take medications at the same time daily for better results.',
                   Colors.blue,
                 ),
-                const Divider(),
-                _buildInsightItem(
-                  context,
-                  Icons.trending_up,
-                  'Improvement Opportunity',
-                  'Weekend adherence is 10% lower than weekdays.',
-                  Colors.orange,
-                ),
+                if (state.missedDoses > 0) ...[
+                  const Divider(),
+                  _buildInsightItem(
+                    context,
+                    Icons.trending_up,
+                    'Improvement Opportunity',
+                    'You have ${state.missedDoses} missed doses. Set reminders to improve consistency.',
+                    Colors.orange,
+                  ),
+                ],
               ],
             ),
           ),

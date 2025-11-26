@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../../domain/entities/adherence_log_entity.dart';
 
 abstract class AdherenceEvent extends Equatable {
   const AdherenceEvent();
@@ -35,6 +36,15 @@ class LogMedicationTakenRequested extends AdherenceEvent {
 
   @override
   List<Object> get props => [medicationId, takenAt, notes ?? ''];
+}
+
+class LogMedicationTakenEvent extends AdherenceEvent {
+  final AdherenceLogEntity log;
+
+  const LogMedicationTakenEvent({required this.log});
+
+  @override
+  List<Object> get props => [log];
 }
 
 class ExportAdherenceDataRequested extends AdherenceEvent {

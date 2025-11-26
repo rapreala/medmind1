@@ -24,6 +24,7 @@ class AdherenceBloc extends Bloc<AdherenceEvent, AdherenceState> {
     on<GetAdherenceLogsRequested>(_onGetAdherenceLogsRequested);
     on<GetAdherenceSummaryRequested>(_onGetAdherenceSummaryRequested);
     on<LogMedicationTakenRequested>(_onLogMedicationTakenRequested);
+    on<LogMedicationTakenEvent>(_onLogMedicationTakenEvent);
     on<ExportAdherenceDataRequested>(_onExportAdherenceDataRequested);
   }
 
@@ -95,6 +96,35 @@ class AdherenceBloc extends Bloc<AdherenceEvent, AdherenceState> {
       (failure) =>
           emit(const AdherenceError(message: 'Failed to log medication')),
       (log) => emit(MedicationLoggedSuccess(log: log)),
+    );
+  }
+
+  Future<void> _onLogMedicationTakenEvent(
+    LogMedicationTakenEvent event,
+    Emitter<AdherenceState> emit,
+  ) async {
+    print('💊 [AdherenceBloc] Processing LogMedicationTakenEvent');
+    print('   Medication ID: ${event.log.medicationId}');
+    print('   Status: ${event.log.status}');
+    
+    final result = await logMedicationTaken(
+      LogMedicationTakenParams(
+        userId: event.log.userId,
+        medicationId: event.log.medicationId,
+        takenAt: event.log.takenTime ?? DateTime.now(),
+        notes: null,
+      ),
+    );
+    
+    result.fold(
+      (failure) {
+        print('❌ [AdherenceBloc] Failed to log medication: ${failure.toString()}');
+        emit(const AdherenceError(message: 'Failed to log medication'));
+      },
+      (log) {
+        print('✅ [AdherenceBloc] Medication logged successfully');
+        emit(MedicationLoggedSuccess(log: log));
+      },
     );
   }
 
