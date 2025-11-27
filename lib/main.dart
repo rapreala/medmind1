@@ -191,13 +191,30 @@ class MedMindApp extends StatelessWidget {
               )..add(AuthCheckRequested());
             },
           ),
+          BlocProvider<AdherenceBloc>(
+            create: (context) {
+              final adherenceRepo = context.read<AdherenceRepositoryImpl>();
+              return AdherenceBloc(
+                getAdherenceLogs: GetAdherenceLogs(adherenceRepo),
+                getAdherenceSummary: GetAdherenceSummary(adherenceRepo),
+                logMedicationTaken: adherence_log.LogMedicationTaken(
+                  adherenceRepo,
+                ),
+                exportAdherenceData: ExportAdherenceData(adherenceRepo),
+              );
+            },
+          ),
           BlocProvider<DashboardBloc>(
             create: (context) {
               final dashboardRepo = context.read<DashboardRepositoryImpl>();
+              final authRepo = context.read<AuthRepositoryImpl>();
+              final adherenceBloc = context.read<AdherenceBloc>();
               return DashboardBloc(
                 getTodayMedications: GetTodayMedications(dashboardRepo),
                 getAdherenceStats: GetAdherenceStats(dashboardRepo),
                 logMedicationTaken: LogMedicationTaken(dashboardRepo),
+                authRepository: authRepo,
+                adherenceBloc: adherenceBloc,
               );
             },
           ),
@@ -209,19 +226,6 @@ class MedMindApp extends StatelessWidget {
                 addMedication: AddMedication(medicationRepo),
                 updateMedication: UpdateMedication(medicationRepo),
                 deleteMedication: DeleteMedication(medicationRepo),
-              );
-            },
-          ),
-          BlocProvider<AdherenceBloc>(
-            create: (context) {
-              final adherenceRepo = context.read<AdherenceRepositoryImpl>();
-              return AdherenceBloc(
-                getAdherenceLogs: GetAdherenceLogs(adherenceRepo),
-                getAdherenceSummary: GetAdherenceSummary(adherenceRepo),
-                logMedicationTaken: adherence_log.LogMedicationTaken(
-                  adherenceRepo,
-                ),
-                exportAdherenceData: ExportAdherenceData(adherenceRepo),
               );
             },
           ),

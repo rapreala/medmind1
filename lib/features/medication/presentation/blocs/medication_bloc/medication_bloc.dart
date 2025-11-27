@@ -5,6 +5,7 @@ import '../../../domain/usecases/update_medication.dart';
 import '../../../domain/usecases/delete_medication.dart';
 import '../../../../../core/usecases/usecase.dart';
 import '../../../../../core/utils/notification_utils.dart';
+import '../../../../../core/services/pending_dose_tracker.dart';
 import 'medication_event.dart';
 import 'medication_state.dart';
 
@@ -47,8 +48,8 @@ class MedicationBloc extends Bloc<MedicationEvent, MedicationState> {
     final result = await addMedication(
       AddMedicationParams(medication: event.medication),
     );
-    result.fold(
-      (failure) =>
+    await result.fold(
+      (failure) async =>
           emit(const MedicationError(message: 'Failed to add medication')),
       (medication) async {
         // Schedule notification if reminders are enabled
@@ -79,12 +80,28 @@ class MedicationBloc extends Bloc<MedicationEvent, MedicationState> {
           title: 'Medication Reminder',
           body: 'Time to take ${medication.name} - ${medication.dosage}',
           scheduledTime: scheduledTime,
-          payload: medication.id,
+          payload:
+              '${medication.id}|${medication.name}', // Include both ID and name
         );
+
+        // For DEMO mode or near-future notifications, add to pending doses immediately
+        final now = DateTime.now();
+        if (scheduledTime.isAfter(now) &&
+            scheduledTime.difference(now).inMinutes <= 5) {
+          // Add to pending doses for notifications within 5 minutes
+          await PendingDoseTracker.addPendingDose(
+            medicationId: medication.id,
+            medicationName: medication.name,
+            scheduledTime: scheduledTime,
+          );
+          print(
+            '✅ Added pending dose for ${medication.name} at ${time.hour}:${time.minute}',
+          );
+        }
       }
     } catch (e) {
       // Silently fail - don't block medication creation if notification fails
-      print('Failed to schedule notification: $e');
+      print('❌ Failed to schedule notification: $e');
     }
   }
 
@@ -96,8 +113,8 @@ class MedicationBloc extends Bloc<MedicationEvent, MedicationState> {
     final result = await updateMedication(
       UpdateMedicationParams(medication: event.medication),
     );
-    result.fold(
-      (failure) =>
+    await result.fold(
+      (failure) async =>
           emit(const MedicationError(message: 'Failed to update medication')),
       (medication) async {
         // Cancel all old notifications (we don't know how many times were previously set)
@@ -123,8 +140,8 @@ class MedicationBloc extends Bloc<MedicationEvent, MedicationState> {
     final result = await deleteMedication(
       DeleteMedicationParams(medicationId: event.medicationId),
     );
-    result.fold(
-      (failure) =>
+    await result.fold(
+      (failure) async =>
           emit(const MedicationError(message: 'Failed to delete medication')),
       (_) async {
         // Cancel all notifications for this medication

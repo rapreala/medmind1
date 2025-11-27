@@ -4,10 +4,13 @@
 November 27, 2025
 
 ## Summary
-✅ **Critical Errors Fixed: 2**
+✅ **Critical Errors Fixed: 3**
 ⚠️ **Warnings Found: 30+ (non-critical)**
 🔧 **Build Configuration Updated**
 🔑 **Google Sign-In Issue Identified**
+🧭 **Navigation Flow Improved**
+🔔 **Notification System Fixed**
+⚡ **BLoC Async Issue Fixed**
 
 ---
 
@@ -160,6 +163,75 @@ color.withValues(alpha: 0.5)
 7. Run `flutter clean && flutter run`
 
 **Detailed instructions**: See `GOOGLE_SIGNIN_FIX.md`
+
+---
+
+## Navigation Improvement 🧭
+
+### Issue Fixed
+After saving a new medication, users were just popped back to the previous screen, which could be confusing.
+
+### Fix Applied
+- **Add Medication**: Now navigates to Medications list page to show the newly added medication
+- **Edit Medication**: Still pops back to detail page (correct behavior)
+- **Improved Messages**: Added ✅/❌ emojis and color-coded success/error messages
+
+### Benefits
+✅ User immediately sees their new medication in the list
+✅ Clear confirmation that the medication was added
+✅ Consistent navigation flow
+✅ Better user experience
+
+**Detailed documentation**: See `NAVIGATION_FIX.md`
+
+---
+
+## Notification System Fix 🔔
+
+### Issue Fixed
+Notifications were being scheduled, but pending dose count wasn't updating. Badge stayed at 0 even after waiting 1-3 minutes in DEMO mode.
+
+### Root Cause
+- Notifications were scheduled ✅
+- But pending doses weren't being tracked ❌
+- Notification tap handler was incomplete ❌
+
+### Fix Applied
+1. **Immediate Tracking for DEMO Mode**: Pending doses are now added immediately when scheduling notifications within 5 minutes
+2. **Notification Tap Handler**: Implemented proper handler to add pending doses when notifications are tapped
+3. **Payload Format**: Updated to include both medication ID and name (`"id|name"`)
+
+### Benefits
+✅ Badge count updates immediately for DEMO mode (shows "3" for 1,2,3 min)
+✅ Pending Doses page shows all scheduled doses
+✅ Notification tap adds to pending doses (backup mechanism)
+✅ Marking as taken decreases badge count correctly
+
+**Detailed documentation**: See `NOTIFICATION_FIX.md`
+
+---
+
+## BLoC Async Fix ⚡
+
+### Issue Fixed
+App crashed with "emit was called after an event handler completed" error when adding medications. This prevented navigation and UI updates.
+
+### Root Cause
+The `result.fold()` method had async callbacks but wasn't being awaited, causing the event handler to complete before async operations finished.
+
+### Fix Applied
+- Added `await` before all `result.fold()` calls
+- Made all fold callbacks `async`
+- Fixed in add, update, and delete medication handlers
+
+### Impact
+✅ No more crashes when adding medications
+✅ Navigation works correctly after save
+✅ UI updates properly
+✅ Pending doses are tracked successfully
+✅ All BLoC events complete without errors
+
+**Detailed documentation**: See `BLOC_ASYNC_FIX.md`
 
 ---
 

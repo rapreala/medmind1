@@ -205,25 +205,38 @@ class _AddMedicationPageState extends State<AddMedicationPage> {
           BlocListener<MedicationBloc, MedicationState>(
             listener: (context, state) {
               if (state is MedicationAdded) {
-                Navigator.pop(context);
+                // Navigate to dashboard and clear navigation stack
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/',
+                  (route) => false,
+                );
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Medication added successfully'),
+                    content: Text('✅ Medication added successfully!'),
+                    backgroundColor: Colors.green,
+                    duration: Duration(seconds: 2),
                   ),
                 );
               }
               if (state is MedicationUpdated) {
+                // Go back to previous screen (detail or list)
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Medication updated successfully'),
+                    content: Text('✅ Medication updated successfully!'),
+                    backgroundColor: Colors.green,
+                    duration: Duration(seconds: 2),
                   ),
                 );
               }
               if (state is MedicationError) {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text(state.message)));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('❌ ${state.message}'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
               }
             },
           ),

@@ -1,5 +1,6 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
+import '../services/pending_dose_tracker.dart';
 
 class NotificationUtils {
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
@@ -38,11 +39,41 @@ class NotificationUtils {
     }
   }
 
-  static void _onNotificationTapped(NotificationResponse response) {
+  static Future<void> _onNotificationTapped(
+    NotificationResponse response,
+  ) async {
     // Handle notification tap
-    // Payload contains medication ID
+    // Payload contains medication ID and name in format: "id|name"
     print('Notification tapped: ${response.payload}');
-    // TODO: Navigate to medication detail or mark as taken
+
+    if (response.payload != null && response.payload!.isNotEmpty) {
+      final parts = response.payload!.split('|');
+      if (parts.length >= 2) {
+        final medicationId = parts[0];
+        final medicationName = parts[1];
+
+        // Add to pending doses when notification is tapped
+        await _addToPendingDoses(medicationId, medicationName);
+      }
+    }
+    // TODO: Navigate to medication detail or pending doses page
+  }
+
+  /// Add a dose to pending doses tracker when notification fires
+  static Future<void> _addToPendingDoses(
+    String medicationId,
+    String medicationName,
+  ) async {
+    try {
+      await PendingDoseTracker.addPendingDose(
+        medicationId: medicationId,
+        medicationName: medicationName,
+        scheduledTime: DateTime.now(),
+      );
+      print('✅ Added pending dose for $medicationName');
+    } catch (e) {
+      print('❌ Failed to add pending dose: $e');
+    }
   }
 
   static Future<void> scheduleMedicationReminder({
