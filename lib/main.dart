@@ -94,9 +94,16 @@ void main() async {
 
     // Initialize timezone data for notifications
     tz.initializeTimeZones();
-    tz.setLocalLocation(
-      tz.getLocation('America/New_York'),
-    ); // Set your timezone
+    // Use device's local timezone
+    final String timeZoneName = DateTime.now().timeZoneName;
+    try {
+      tz.setLocalLocation(tz.getLocation(timeZoneName));
+      print('📍 Using timezone: $timeZoneName');
+    } catch (e) {
+      // Fallback to UTC if device timezone not found
+      tz.setLocalLocation(tz.UTC);
+      print('⚠️ Could not find timezone $timeZoneName, using UTC');
+    }
 
     // Initialize notifications
     await NotificationUtils.initialize();

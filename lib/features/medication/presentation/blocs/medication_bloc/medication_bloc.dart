@@ -80,24 +80,13 @@ class MedicationBloc extends Bloc<MedicationEvent, MedicationState> {
           title: 'Medication Reminder',
           body: 'Time to take ${medication.name} - ${medication.dosage}',
           scheduledTime: scheduledTime,
-          payload:
-              '${medication.id}|${medication.name}', // Include both ID and name
+          payload: '${medication.id}|${medication.name}',
+          recurring: true, // Daily recurring notification
         );
 
-        // For DEMO mode or near-future notifications, add to pending doses immediately
-        final now = DateTime.now();
-        if (scheduledTime.isAfter(now) &&
-            scheduledTime.difference(now).inMinutes <= 5) {
-          // Add to pending doses for notifications within 5 minutes
-          await PendingDoseTracker.addPendingDose(
-            medicationId: medication.id,
-            medicationName: medication.name,
-            scheduledTime: scheduledTime,
-          );
-          print(
-            '✅ Added pending dose for ${medication.name} at ${time.hour}:${time.minute}',
-          );
-        }
+        print(
+          '✅ Scheduled daily reminder for ${medication.name} at ${time.hour}:${time.minute.toString().padLeft(2, '0')}',
+        );
       }
     } catch (e) {
       // Silently fail - don't block medication creation if notification fails
