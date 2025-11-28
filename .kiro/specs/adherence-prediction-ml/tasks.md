@@ -1,4 +1,4 @@
-# Implemen tation Plan
+# Implemen itation Plan
 
 - [x] 1. Set up project structure and acquire dataset
   - Create directory structure: `summative/linear_regression/`, `summative/API/`, `summative/FlutterApp/`
@@ -179,7 +179,7 @@
   - Test predict endpoint returns 422 for missing fields
   - Test CORS headers are present in responses
 
-- [ ] 15. Deploy API to hosting platform
+- [x] 15. Deploy API to hosting platform
   - Create account on Render (or Railway/Heroku)
   - Create new Web Service
   - Connect to GitHub repository
@@ -195,7 +195,7 @@
   - **Property 12: API Response Time Performance**
   - **Validates: Requirements 11.4**
 
-- [ ] 16. Checkpoint - Verify API is deployed and functional
+- [x] 16. Checkpoint - Verify API is deployed and functional
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 17. Create Flutter prediction page UI

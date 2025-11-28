@@ -140,6 +140,29 @@ All input fields are validated with the following constraints:
 
 ## Testing with cURL
 
+### Test Deployed API
+
+```bash
+# Test health endpoint
+curl https://medmind-adherence-api.onrender.com/health
+
+# Test prediction endpoint
+curl -X POST https://medmind-adherence-api.onrender.com/predict \
+  -H "Content-Type: application/json" \
+  -d '{
+    "age": 45,
+    "num_medications": 3,
+    "medication_complexity": 2.5,
+    "days_since_start": 120,
+    "missed_doses_last_week": 1,
+    "snooze_frequency": 0.2,
+    "chronic_conditions": 2,
+    "previous_adherence_rate": 85.5
+  }'
+```
+
+### Test Local API
+
 ```bash
 # Test health endpoint
 curl http://localhost:8000/health
@@ -201,7 +224,44 @@ The API handles the following error scenarios:
 
 ## Deployment
 
-See the main project README for deployment instructions to Render, Railway, or other hosting platforms.
+### Public API URL
+
+**🌐 Deployed API:** `https://medmind-adherence-api.onrender.com`
+
+**📚 Swagger UI:** `https://medmind-adherence-api.onrender.com/docs`
+
+**✅ Status:** Live and operational (All 7 tests passed)
+
+### Deployment Instructions
+
+See `DEPLOYMENT_GUIDE.md` for detailed step-by-step instructions to deploy to:
+- Render (Recommended - Free tier available)
+- Railway
+- Heroku
+
+### Quick Deploy to Render
+
+1. Push code to GitHub
+2. Create account at https://render.com
+3. Create new Web Service
+4. Connect GitHub repository
+5. Configure:
+   - Root Directory: `summative/API`
+   - Build Command: `pip install -r requirements.txt`
+   - Start Command: `uvicorn prediction:app --host 0.0.0.0 --port $PORT`
+6. Deploy and test
+
+### Testing Deployed API
+
+Once deployed, test using:
+
+```bash
+# Replace <API_URL> with your deployed URL
+python test_deployed_api.py <API_URL>
+
+# Example:
+python test_deployed_api.py https://medmind-adherence-api.onrender.com
+```
 
 ## Model Information
 

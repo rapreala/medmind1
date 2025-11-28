@@ -60,11 +60,15 @@ summative/
 
 ## API Endpoint
 
-**Public URL:** [To be added after deployment]
+**🌐 Public URL:** `https://medmind-adherence-api.onrender.com`
+
+**📚 Swagger UI:** `https://medmind-adherence-api.onrender.com/docs`
+
+**✅ Status:** Live and operational (Deployed on Render)
 
 **Example Request:**
 ```bash
-curl -X POST "https://your-api-url.com/predict" \
+curl -X POST "https://medmind-adherence-api.onrender.com/predict" \
   -H "Content-Type: application/json" \
   -d '{
     "age": 45,
