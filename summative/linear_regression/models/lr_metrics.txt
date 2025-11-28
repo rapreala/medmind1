@@ -1,0 +1,24 @@
+LINEAR REGRESSION MODEL METRICS
+======================================================================
+
+Training Set:
+  MSE:  79.7624
+  RMSE: 8.9310
+  R²:   0.6325
+
+Test Set:
+  MSE:  95.7419
+  RMSE: 9.7848
+  R²:   0.6571
+
+Training Time: 0.0011 seconds
+
+Feature Coefficients:
+  missed_doses_last_week           -10.0889
+  previous_adherence_rate           +4.2031
+  num_medications                   -3.2947
+  medication_complexity             -2.6654
+  snooze_frequency                  -1.4353
+  chronic_conditions                +0.9248
+  age                               +0.9074
+  days_since_start                  -0.9036

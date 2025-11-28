@@ -1,0 +1,36 @@
+RANDOM FOREST MODEL METRICS
+======================================================================
+
+Best Hyperparameters:
+  max_depth: None
+  min_samples_leaf: 1
+  min_samples_split: 2
+  n_estimators: 300
+
+Model Configuration:
+  Number of trees: 300
+  Max depth: None
+  Min samples split: 2
+  Min samples leaf: 1
+
+Training Set:
+  MSE:  3.8290
+  RMSE: 1.9568
+  R²:   0.9824
+
+Test Set:
+  MSE:  31.5636
+  RMSE: 5.6182
+  R²:   0.8869
+
+Hyperparameter Tuning Time: 102.14 seconds
+
+Feature Importance:
+  missed_doses_last_week             0.5761
+  previous_adherence_rate            0.1649
+  num_medications                    0.0972
+  medication_complexity              0.0810
+  snooze_frequency                   0.0316
+  days_since_start                   0.0202
+  chronic_conditions                 0.0155
+  age                                0.0135

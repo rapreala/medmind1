@@ -1,0 +1,33 @@
+DECISION TREE MODEL METRICS
+======================================================================
+
+Best Hyperparameters:
+  max_depth: 10
+  min_samples_leaf: 4
+  min_samples_split: 10
+
+Model Structure:
+  Tree depth: 10
+  Number of leaf nodes: 106
+
+Training Set:
+  MSE:  15.1991
+  RMSE: 3.8986
+  R²:   0.9300
+
+Test Set:
+  MSE:  72.8139
+  RMSE: 8.5331
+  R²:   0.7392
+
+Hyperparameter Tuning Time: 5.77 seconds
+
+Feature Importance:
+  missed_doses_last_week             0.6040
+  previous_adherence_rate            0.1458
+  num_medications                    0.0926
+  medication_complexity              0.0829
+  days_since_start                   0.0261
+  chronic_conditions                 0.0256
+  snooze_frequency                   0.0138
+  age                                0.0092
