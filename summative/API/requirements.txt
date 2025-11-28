@@ -1,0 +1,12 @@
+# FastAPI and web server dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+
+# Machine learning dependencies
+scikit-learn==1.7.2
+numpy==2.3.5
+joblib==1.5.2
+
+# Additional utilities
+python-multipart==0.0.6

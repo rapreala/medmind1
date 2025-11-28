@@ -1,4 +1,4 @@
-# Implementation Plan
+# Implemen tation Plan
 
 - [x] 1. Set up project structure and acquire dataset
   - Create directory structure: `summative/linear_regression/`, `summative/API/`, `summative/FlutterApp/`
@@ -111,7 +111,7 @@
 - [x] 9. Checkpoint - Verify ML pipeline is complete
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 10. Set up FastAPI project structure
+- [x] 10. Set up FastAPI project structure
   - Create `summative/API/` directory
   - Create `prediction.py` file for FastAPI application
   - Copy trained model and scaler to `summative/API/models/`
@@ -119,7 +119,7 @@
   - Create requirements.txt with all dependencies and versions
   - _Requirements: 9.1, 11.3_
 
-- [ ] 11. Implement Pydantic input validation models
+- [x] 11. Implement Pydantic input validation models
   - Create `PredictionInput` BaseModel with 8 fields
   - Add type annotations for each field (int, float)
   - Define Field constraints with ge/le for range validation
@@ -139,7 +139,7 @@
   - **Property 14: Out-of-Range Validation Error Response**
   - **Validates: Requirements 13.1**
 
-- [ ] 12. Implement FastAPI prediction endpoint
+- [x] 12. Implement FastAPI prediction endpoint
   - Create FastAPI app instance
   - Implement POST endpoint at `/predict`
   - Load model and scaler at startup (not per request)
@@ -151,7 +151,7 @@
   - Add error handling for prediction failures
   - _Requirements: 9.1, 9.2, 9.5_
 
-- [ ] 13. Add CORS middleware and logging
+- [x] 13. Add CORS middleware and logging
   - Import and configure CORSMiddleware
   - Allow all origins for development (restrict in production)
   - Set up Python logging with INFO level
@@ -164,7 +164,7 @@
   - **Property 16: Request Logging Completeness**
   - **Validates: Requirements 13.5**
 
-- [ ] 14. Test API locally with Swagger UI
+- [x] 14. Test API locally with Swagger UI
   - Run API locally using `uvicorn prediction:app --reload`
   - Access Swagger UI at `http://localhost:8000/docs`
   - Test `/predict` endpoint with valid input
