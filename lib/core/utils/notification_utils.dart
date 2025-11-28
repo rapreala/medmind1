@@ -25,10 +25,11 @@ class NotificationUtils {
         iOS: iosSettings,
       );
 
-      // Set up notification tap handler
+      // Set up notification tap handler and background handler
       await _notificationsPlugin.initialize(
         settings,
         onDidReceiveNotificationResponse: _onNotificationTapped,
+        onDidReceiveBackgroundNotificationResponse: _onNotificationTapped,
       );
 
       _isInitialized = true;
@@ -82,6 +83,7 @@ class NotificationUtils {
     required String body,
     required DateTime scheduledTime,
     required String payload,
+    bool recurring = true,
   }) async {
     if (!_isInitialized) {
       print('Notifications not initialized - skipping schedule');
@@ -89,26 +91,40 @@ class NotificationUtils {
     }
 
     try {
+      final tzScheduledTime = _scheduleTime(scheduledTime);
+
       await _notificationsPlugin.zonedSchedule(
         id,
         title,
         body,
-        _scheduleTime(scheduledTime),
-        const NotificationDetails(
+        tzScheduledTime,
+        NotificationDetails(
           android: AndroidNotificationDetails(
             'medication_reminder',
             'Medication Reminders',
             channelDescription: 'Notifications for medication reminders',
             importance: Importance.high,
             priority: Priority.high,
+            // Show notification even when app is in foreground
+            playSound: true,
+            enableVibration: true,
           ),
-          iOS: DarwinNotificationDetails(sound: 'default'),
+          iOS: const DarwinNotificationDetails(
+            sound: 'default',
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+          ),
         ),
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.time,
+        matchDateTimeComponents: recurring ? DateTimeComponents.time : null,
         payload: payload,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      );
+
+      print(
+        '✅ Scheduled notification for ${scheduledTime.hour}:${scheduledTime.minute.toString().padLeft(2, '0')}',
       );
     } catch (e) {
       print('Failed to schedule reminder: $e');
@@ -160,14 +176,17 @@ class NotificationUtils {
     required String body,
     String? payload,
   }) async {
+    print('🔔 showInstantNotification called: $title');
+    print('🔔 Initialized: $_isInitialized');
+
     if (!_isInitialized) {
-      print('Notifications not initialized - showing fallback');
-      // Fallback: Just show a snackbar or print to console
+      print('❌ Notifications not initialized - showing fallback');
       print('NOTIFICATION: $title - $body');
       return;
     }
 
     try {
+      print('📤 Attempting to show notification...');
       await _notificationsPlugin.show(
         DateTime.now().millisecondsSinceEpoch.remainder(100000),
         title,
@@ -177,16 +196,18 @@ class NotificationUtils {
             'instant_notifications',
             'Instant Notifications',
             channelDescription: 'Instant notification channel',
-            importance: Importance.defaultImportance,
-            priority: Priority.defaultPriority,
+            importance: Importance.high,
+            priority: Priority.high,
+            playSound: true,
+            enableVibration: true,
           ),
           iOS: DarwinNotificationDetails(),
         ),
         payload: payload,
       );
+      print('✅ Notification shown successfully');
     } catch (e) {
-      print('Failed to show notification: $e');
-      // Fallback
+      print('❌ Failed to show notification: $e');
       print('NOTIFICATION FALLBACK: $title - $body');
     }
   }
@@ -215,5 +236,32 @@ class NotificationUtils {
       print('Failed to get pending notifications: $e');
       return [];
     }
+  }
+
+  /// Schedule a one-time notification for testing (fires in X seconds)
+  static Future<void> scheduleTestNotification({
+    required String medicationId,
+    required String medicationName,
+    required int delaySeconds,
+  }) async {
+    if (!_isInitialized) {
+      print('Notifications not initialized');
+      return;
+    }
+
+    final scheduledTime = DateTime.now().add(Duration(seconds: delaySeconds));
+
+    await scheduleMedicationReminder(
+      id: medicationId.hashCode,
+      title: 'Test Reminder',
+      body: 'Time to take $medicationName (Test notification)',
+      scheduledTime: scheduledTime,
+      payload: '$medicationId|$medicationName',
+      recurring: false, // One-time notification for testing
+    );
+
+    print(
+      '✅ Scheduled test notification for $medicationName in $delaySeconds seconds',
+    );
   }
 }

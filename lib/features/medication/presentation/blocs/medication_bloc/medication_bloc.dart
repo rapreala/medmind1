@@ -55,6 +55,8 @@ class MedicationBloc extends Bloc<MedicationEvent, MedicationState> {
         // Schedule notification if reminders are enabled
         if (medication.enableReminders) {
           await _scheduleNotification(medication);
+          // Check for missed doses today and add them to pending doses
+          await _addMissedDosesToPending(medication);
         }
         emit(MedicationAdded(medication: medication));
       },
@@ -80,28 +82,69 @@ class MedicationBloc extends Bloc<MedicationEvent, MedicationState> {
           title: 'Medication Reminder',
           body: 'Time to take ${medication.name} - ${medication.dosage}',
           scheduledTime: scheduledTime,
-          payload:
-              '${medication.id}|${medication.name}', // Include both ID and name
+          payload: '${medication.id}|${medication.name}',
+          recurring: true, // Daily recurring notification
         );
 
-        // For DEMO mode or near-future notifications, add to pending doses immediately
-        final now = DateTime.now();
-        if (scheduledTime.isAfter(now) &&
-            scheduledTime.difference(now).inMinutes <= 5) {
-          // Add to pending doses for notifications within 5 minutes
+        print(
+          '✅ Scheduled daily reminder for ${medication.name} at ${time.hour}:${time.minute.toString().padLeft(2, '0')}',
+        );
+      }
+    } catch (e) {
+      // Silently fail - don't block medication creation if notification fails
+      print('❌ Failed to schedule notification: $e');
+    }
+  }
+
+  /// Check for missed doses today and add them to pending doses
+  Future<void> _addMissedDosesToPending(dynamic medication) async {
+    try {
+      final now = DateTime.now();
+      print('\n🔍 Checking for missed doses for: ${medication.name}');
+      print('   Current time: ${now.toString()}');
+      print('   Number of times: ${medication.times.length}');
+
+      for (final time in medication.times) {
+        final scheduledTime = DateTime(
+          now.year,
+          now.month,
+          now.day,
+          time.hour,
+          time.minute,
+        );
+
+        print(
+          '   Checking time: ${time.hour}:${time.minute.toString().padLeft(2, '0')}',
+        );
+        print('   Scheduled: ${scheduledTime.toString()}');
+        print('   Is before now? ${scheduledTime.isBefore(now)}');
+
+        // If the scheduled time has already passed today, add to pending doses
+        if (scheduledTime.isBefore(now)) {
           await PendingDoseTracker.addPendingDose(
             medicationId: medication.id,
             medicationName: medication.name,
             scheduledTime: scheduledTime,
           );
+
           print(
-            '✅ Added pending dose for ${medication.name} at ${time.hour}:${time.minute}',
+            '   ✅ Added missed dose to pending: ${medication.name} at ${time.hour}:${time.minute.toString().padLeft(2, '0')}',
           );
+
+          // Verify it was added
+          final count = await PendingDoseTracker.getPendingDoseCount();
+          print('   📊 Current pending dose count: $count');
+        } else {
+          print('   ⏭️  Skipped (future time)');
         }
       }
-    } catch (e) {
-      // Silently fail - don't block medication creation if notification fails
-      print('❌ Failed to schedule notification: $e');
+
+      // Final verification
+      final finalCount = await PendingDoseTracker.getPendingDoseCount();
+      print('📊 FINAL pending dose count: $finalCount\n');
+    } catch (e, stackTrace) {
+      print('❌ Failed to add missed doses to pending: $e');
+      print('Stack trace: $stackTrace');
     }
   }
 
@@ -126,6 +169,8 @@ class MedicationBloc extends Bloc<MedicationEvent, MedicationState> {
         // Schedule new notifications if reminders are enabled
         if (medication.enableReminders) {
           await _scheduleNotification(medication);
+          // Check for missed doses today and add them to pending doses
+          await _addMissedDosesToPending(medication);
         }
         emit(MedicationUpdated(medication: medication));
       },

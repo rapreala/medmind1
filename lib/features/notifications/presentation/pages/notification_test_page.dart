@@ -45,15 +45,20 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
   }
 
   Future<void> _testScheduledNotification() async {
-    _addLog('Scheduling notification for 10 seconds from now...');
-    final scheduledTime = DateTime.now().add(const Duration(seconds: 10));
+    await _testScheduledNotificationWithDelay(10);
+  }
+
+  Future<void> _testScheduledNotificationWithDelay(int seconds) async {
+    _addLog('Scheduling notification for $seconds seconds from now...');
+    final scheduledTime = DateTime.now().add(Duration(seconds: seconds));
 
     await NotificationUtils.scheduleMedicationReminder(
       id: DateTime.now().millisecondsSinceEpoch,
       title: 'Scheduled Test',
-      body: 'This notification was scheduled 10 seconds ago',
+      body: 'This notification was scheduled $seconds seconds ago',
       scheduledTime: scheduledTime,
-      payload: 'test',
+      payload: 'test_medication|Test Med',
+      recurring: false, // One-time test notification
     );
 
     _addLog(
@@ -112,6 +117,18 @@ class _NotificationTestPageState extends State<NotificationTestPage> {
               onPressed: _testScheduledNotification,
               icon: const Icon(Icons.schedule),
               label: const Text('Schedule Notification (10s)'),
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton.icon(
+              onPressed: () => _testScheduledNotificationWithDelay(30),
+              icon: const Icon(Icons.timer),
+              label: const Text('Schedule Notification (30s)'),
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton.icon(
+              onPressed: () => _testScheduledNotificationWithDelay(60),
+              icon: const Icon(Icons.timer_10),
+              label: const Text('Schedule Notification (1min)'),
             ),
             const SizedBox(height: 8),
             ElevatedButton.icon(
