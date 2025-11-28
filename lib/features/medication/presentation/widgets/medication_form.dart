@@ -76,16 +76,6 @@ class MedicationForm extends StatelessWidget {
                 border: OutlineInputBorder(),
               ),
               items: const [
-                // DEMO OPTIONS (for testing)
-                DropdownMenuItem(
-                  value: 'DEMO: 1 min',
-                  child: Text('🧪 DEMO: 1 min from now'),
-                ),
-                DropdownMenuItem(
-                  value: 'DEMO: 1, 2, 3 min',
-                  child: Text('🧪 DEMO: 1, 2, 3 min from now'),
-                ),
-                // NORMAL OPTIONS
                 DropdownMenuItem(
                   value: 'Once daily',
                   child: Text('Once daily'),
@@ -229,28 +219,6 @@ class MedicationForm extends StatelessWidget {
   }
 
   List<TimeOfDay> _getTimesForFrequency() {
-    // DEMO MODE
-    if (frequency.contains('DEMO')) {
-      final now = DateTime.now();
-      final demoTime1 = now.add(const Duration(minutes: 1));
-      final demoTime2 = now.add(const Duration(minutes: 2));
-      final demoTime3 = now.add(const Duration(minutes: 3));
-
-      switch (frequency) {
-        case 'DEMO: 1 min':
-          return [TimeOfDay(hour: demoTime1.hour, minute: demoTime1.minute)];
-        case 'DEMO: 1, 2, 3 min':
-          return [
-            TimeOfDay(hour: demoTime1.hour, minute: demoTime1.minute),
-            TimeOfDay(hour: demoTime2.hour, minute: demoTime2.minute),
-            TimeOfDay(hour: demoTime3.hour, minute: demoTime3.minute),
-          ];
-        default:
-          return [TimeOfDay(hour: demoTime1.hour, minute: demoTime1.minute)];
-      }
-    }
-
-    // NORMAL MODE
     switch (frequency) {
       case 'Once daily':
         return [const TimeOfDay(hour: 8, minute: 0)];

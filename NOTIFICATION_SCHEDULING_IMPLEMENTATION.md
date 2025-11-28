@@ -17,6 +17,8 @@ Implemented actual scheduled notifications that fire at medication reminder time
 - **Set recurring to true** for medication reminders (daily repeat)
 - **Improved logging** to show scheduled times clearly
 - **Maintained notification cancellation** on medication update/delete
+- **NEW: Automatic missed dose detection** - when creating/updating medications, checks if any scheduled times have already passed today
+- **NEW: Immediate pending dose addition** - missed doses are automatically added to pending doses tracker without waiting for notification
 
 ### 3. Enhanced Notification Test Page (`lib/features/notifications/presentation/pages/notification_test_page.dart`)
 - **Added 30-second test button** for more realistic testing
@@ -28,9 +30,10 @@ Implemented actual scheduled notifications that fire at medication reminder time
 
 ### Medication Reminders
 1. When a medication is added with reminders enabled, the system schedules a notification for each time in the schedule
-2. Notifications are set to recur daily at the same time using `matchDateTimeComponents: DateTimeComponents.time`
-3. Each notification has a unique ID based on `medication.id.hashCode + timeIndex`
-4. When a notification fires, it automatically adds the medication to the pending doses list
+2. **Missed doses are detected immediately** - if any scheduled times have already passed today, they're added to pending doses right away
+3. Notifications are set to recur daily at the same time using `matchDateTimeComponents: DateTimeComponents.time`
+4. Each notification has a unique ID based on `medication.id.hashCode + timeIndex`
+5. When a notification fires, it automatically adds the medication to the pending doses list
 
 ### Notification Flow
 ```

@@ -13,12 +13,44 @@ class PendingDosesPage extends StatefulWidget {
 }
 
 class _PendingDosesPageState extends State<PendingDosesPage> {
+  late Future<Map<String, dynamic>> _pendingDosesFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPendingDoses();
+  }
+
+  void _loadPendingDoses() {
+    print('🔄 Pending Doses Page: Loading pending doses...');
+    setState(() {
+      _pendingDosesFuture = PendingDoseTracker.getPendingDoses().then((doses) {
+        print('📋 Pending Doses Page: Loaded ${doses.length} doses');
+        for (final entry in doses.entries) {
+          print(
+            '   - ${entry.value['medicationName']} at ${entry.value['scheduledTime']}',
+          );
+        }
+        return doses;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Pending Doses')),
+      appBar: AppBar(
+        title: const Text('Pending Doses'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadPendingDoses,
+            tooltip: 'Refresh',
+          ),
+        ],
+      ),
       body: FutureBuilder<Map<String, dynamic>>(
-        future: PendingDoseTracker.getPendingDoses(),
+        future: _pendingDosesFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -171,7 +203,8 @@ class _PendingDosesPageState extends State<PendingDosesPage> {
       scheduledTime: scheduledTime,
     );
 
-    setState(() {});
+    // Reload the list
+    _loadPendingDoses();
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -206,7 +239,8 @@ class _PendingDosesPageState extends State<PendingDosesPage> {
       scheduledTime: scheduledTime,
     );
 
-    setState(() {});
+    // Reload the list
+    _loadPendingDoses();
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

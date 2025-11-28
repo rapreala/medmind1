@@ -160,13 +160,19 @@ class _DashboardPageState extends State<DashboardPage> {
 
         return Stack(
           children: [
-            IconButton(
-              icon: const Icon(Icons.notifications_outlined),
-              onPressed: () async {
-                await Navigator.pushNamed(context, '/pending-doses');
-                // Refresh count after returning
-                setState(() {});
+            GestureDetector(
+              onLongPress: () {
+                // Long press to access notification test page
+                Navigator.pushNamed(context, '/notifications');
               },
+              child: IconButton(
+                icon: const Icon(Icons.notifications_outlined),
+                onPressed: () async {
+                  await Navigator.pushNamed(context, '/pending-doses');
+                  // Refresh count after returning
+                  setState(() {});
+                },
+              ),
             ),
             if (count > 0)
               Positioned(
