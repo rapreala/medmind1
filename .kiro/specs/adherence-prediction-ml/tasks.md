@@ -198,7 +198,7 @@
 - [x] 16. Checkpoint - Verify API is deployed and functional
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 17. Create Flutter prediction page UI
+- [x] 17. Create Flutter prediction page UI
   - Create new file: `lib/features/adherence/presentation/pages/adherence_prediction_page.dart`
   - Design page layout with Scaffold and AppBar
   - Add 8 TextFormField widgets for input (age, num_medications, etc.)
@@ -210,7 +210,7 @@
   - Ensure UI elements don't overlap and layout is clean
   - _Requirements: 12.1, 12.5_
 
-- [ ] 18. Implement HTTP service for API calls
+- [x] 18. Implement HTTP service for API calls
   - Create `lib/features/adherence/presentation/services/prediction_service.dart`
   - Add http package to pubspec.yaml
   - Implement `predictAdherence()` method
@@ -223,7 +223,7 @@
   - Handle network errors (timeout, no connection)
   - _Requirements: 12.2, 13.3, 13.4_
 
-- [ ] 19. Integrate API service with prediction page
+- [x] 19. Integrate API service with prediction page
   - Inject prediction service into page
   - Implement form submission handler
   - Show loading indicator while waiting for API response
@@ -247,16 +247,16 @@
   - Test error message displayed on API failure
   - Test loading indicator shown during API call
 
-- [ ] 20. Add navigation to prediction page
+- [x] 20. Add navigation to prediction page
   - Add route for prediction page in router configuration
   - Add navigation button/menu item in appropriate location (dashboard or adherence section)
   - Test navigation flow
   - _Requirements: 12.1_
 
-- [ ] 21. Checkpoint - Verify Flutter integration is complete
+- [x] 21. Checkpoint - Verify Flutter integration is complete
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 22. Create comprehensive README documentation
+- [x] 22. Create comprehensive README documentation
   - Add mission statement (maximum 4 lines) describing MedMind and adherence prediction
   - Document dataset source, description, and relevance to medication adherence
   - Provide public API endpoint URL with example curl command
@@ -266,7 +266,7 @@
   - Document all dependencies and versions
   - _Requirements: 1.4, 11.5, 14.1_
 
-- [ ] 23. Create video demonstration
+- [x] 23. Create video demonstration
   - Record 5-minute maximum video demonstration
   - Ensure presenter camera is visible throughout
   - Demonstrate mobile app making predictions with various inputs

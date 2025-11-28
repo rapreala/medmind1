@@ -3,6 +3,18 @@ import 'package:flutter/foundation.dart';
 
 class FirebaseConfig {
   static Future<void> initialize() async {
+    // Check if Firebase is already initialized
+    try {
+      if (Firebase.apps.isNotEmpty) {
+        if (kDebugMode) {
+          print('🔥 Firebase already initialized, skipping...');
+        }
+        return;
+      }
+    } catch (e) {
+      // Firebase not initialized yet, continue
+    }
+
     final firebaseOptions = _getFirebaseOptions();
     _logFirebaseOptions(firebaseOptions);
 
@@ -33,14 +45,14 @@ class FirebaseConfig {
       );
     }
 
-    // ANDROID CONFIG (Your actual values)
+    // ANDROID CONFIG (Updated from google-services.json)
     if (defaultTargetPlatform == TargetPlatform.android) {
       return const FirebaseOptions(
-        apiKey: 'AIzaSyAY_Eq7xuD6m5d6sgB3JNlGoJ_NHYhHkDM',
-        appId: '1:1018558923142:android:48fe15c8b98ffb6d4b2c07',
-        messagingSenderId: '1018558923142',
-        projectId: 'medmind-c6af2',
-        storageBucket: 'medmind-c6af2.firebasestorage.app',
+        apiKey: 'AIzaSyDzQIjstsnhiW7xZlP4dI71pComnWzEuFE',
+        appId: '1:301697188256:android:dbc6ddc49d4d1c5ee624c5',
+        messagingSenderId: '301697188256',
+        projectId: 'medmind1-da4fa',
+        storageBucket: 'medmind1-da4fa.firebasestorage.app',
       );
     }
 

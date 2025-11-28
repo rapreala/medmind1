@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:medmind/features/auth/data/datasources/auth_remote_data_source.dart';
+import 'package:medmind/features/adherence/presentation/pages/adherence_prediction_page.dart';
 import 'package:medmind/injection_container.dart';
 
 class MainLayout extends StatefulWidget {
@@ -16,6 +17,7 @@ class _MainLayoutState extends State<MainLayout> {
     DashboardPageSimple(),
     MedicationListPageSimple(),
     AdherenceHistoryPageSimple(),
+    AdherencePredictionPage(),
     ProfilePageSimple(),
   ];
 
@@ -47,14 +49,14 @@ class _MainLayoutState extends State<MainLayout> {
             label: 'History',
           ),
           NavigationDestination(
+            icon: Icon(Icons.analytics_outlined),
+            selectedIcon: Icon(Icons.analytics),
+            label: 'Prediction',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.person_outline),
             selectedIcon: Icon(Icons.person),
             label: 'Profile',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.admin_panel_settings_outlined),
-            selectedIcon: Icon(Icons.admin_panel_settings),
-            label: 'Auth Test',
           ),
         ],
       ),
