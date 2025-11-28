@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.medmind"
+    namespace = "com.example.medmind1"
     compileSdk = 36
 
     compileOptions {
@@ -20,7 +20,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.medmind"
+        applicationId = "com.example.medmind1"
         minSdk = flutter.minSdkVersion
         targetSdk = 36
         versionCode = 1

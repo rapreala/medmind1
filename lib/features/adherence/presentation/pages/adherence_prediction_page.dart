@@ -78,7 +78,21 @@ class _AdherencePredictionPageState extends State<AdherencePredictionPage> {
   }
 
   Future<void> _handlePredict() async {
+    // Show immediate feedback
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Making prediction...'),
+        duration: Duration(seconds: 1),
+      ),
+    );
+
     if (!_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill in all fields correctly'),
+          backgroundColor: Colors.red,
+        ),
+      );
       return;
     }
 
@@ -109,40 +123,81 @@ class _AdherencePredictionPageState extends State<AdherencePredictionPage> {
         _isLoading = false;
         _predictedAdherence = prediction;
       });
+
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Prediction complete: ${prediction.toStringAsFixed(1)}%',
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
     } on TimeoutException catch (e) {
       // Display connection error messages on network failures
+      final errorMsg =
+          e.message ??
+          'Request timed out. Please check your connection and try again.';
       setState(() {
         _isLoading = false;
-        _errorMessage =
-            e.message ??
-            'Request timed out. Please check your connection and try again.';
+        _errorMessage = errorMsg;
       });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMsg), backgroundColor: Colors.red),
+        );
+      }
     } on SocketException catch (e) {
       // Display connection error messages on network failures
+      final errorMsg = e.message.isNotEmpty
+          ? e.message
+          : 'No internet connection. Please check your network and try again.';
       setState(() {
         _isLoading = false;
-        _errorMessage = e.message.isNotEmpty
-            ? e.message
-            : 'No internet connection. Please check your network and try again.';
+        _errorMessage = errorMsg;
       });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMsg), backgroundColor: Colors.red),
+        );
+      }
     } on HttpException catch (e) {
       // Display user-friendly error messages on API errors
       setState(() {
         _isLoading = false;
         _errorMessage = e.message;
       });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+        );
+      }
     } on FormatException {
       // Display user-friendly error messages on API errors
+      const errorMsg = 'Failed to parse server response. Please try again.';
       setState(() {
         _isLoading = false;
-        _errorMessage = 'Failed to parse server response. Please try again.';
+        _errorMessage = errorMsg;
       });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(errorMsg), backgroundColor: Colors.red),
+        );
+      }
     } catch (e) {
       // Display user-friendly error messages on API errors
+      final errorMsg = 'An unexpected error occurred: $e';
       setState(() {
         _isLoading = false;
-        _errorMessage = 'An unexpected error occurred. Please try again later.';
+        _errorMessage = errorMsg;
       });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMsg), backgroundColor: Colors.red),
+        );
+      }
     }
   }
 

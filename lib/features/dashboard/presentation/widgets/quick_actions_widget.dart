@@ -4,12 +4,14 @@ class QuickActionsWidget extends StatelessWidget {
   final VoidCallback onAddMedication;
   final VoidCallback onViewMedications;
   final VoidCallback onViewHistory;
+  final VoidCallback? onViewPrediction;
 
   const QuickActionsWidget({
     super.key,
     required this.onAddMedication,
     required this.onViewMedications,
     required this.onViewHistory,
+    this.onViewPrediction,
   });
 
   @override
@@ -19,9 +21,9 @@ class QuickActionsWidget extends StatelessWidget {
       children: [
         Text(
           'Quick Actions',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
         Row(
@@ -55,6 +57,18 @@ class QuickActionsWidget extends StatelessWidget {
                 onViewHistory,
               ),
             ),
+            if (onViewPrediction != null) ...[
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildActionCard(
+                  context,
+                  'ML Prediction',
+                  Icons.analytics_outlined,
+                  Colors.purple,
+                  onViewPrediction!,
+                ),
+              ),
+            ],
           ],
         ),
       ],
@@ -76,10 +90,7 @@ class QuickActionsWidget extends StatelessWidget {
         decoration: BoxDecoration(
           color: color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: color.withOpacity(0.2),
-            width: 1,
-          ),
+          border: Border.all(color: color.withOpacity(0.2), width: 1),
         ),
         child: Column(
           children: [
@@ -89,11 +100,7 @@ class QuickActionsWidget extends StatelessWidget {
                 color: color.withOpacity(0.2),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                color: color,
-                size: 24,
-              ),
+              child: Icon(icon, color: color, size: 24),
             ),
             const SizedBox(height: 8),
             Text(

@@ -32,6 +32,7 @@ import 'features/medication/domain/entities/medication_entity.dart';
 // Feature imports - Adherence
 import 'features/adherence/presentation/pages/adherence_history_page.dart';
 import 'features/adherence/presentation/pages/adherence_analytics_page.dart';
+import 'features/adherence/presentation/pages/adherence_prediction_page.dart';
 import 'features/adherence/presentation/blocs/adherence_bloc/adherence_bloc.dart';
 
 // Feature imports - Profile
@@ -322,6 +323,10 @@ class MedMindApp extends StatelessWidget {
               case '/adherence-analytics':
                 return MaterialPageRoute(
                   builder: (_) => const AdherenceAnalyticsPage(),
+                );
+              case '/adherence-prediction':
+                return MaterialPageRoute(
+                  builder: (_) => const AdherencePredictionPage(),
                 );
 
               // Profile routes

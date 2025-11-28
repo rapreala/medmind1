@@ -36,12 +36,12 @@ class FirebaseConfig {
     // Platform-specific Firebase configuration
     if (kIsWeb) {
       return const FirebaseOptions(
-        apiKey: 'AIzaSyBxGDxjBp_-Ar1_WHeivlwAkv97K_P8u3I',
-        appId: '1:1018558923142:web:7fa35f0c4a8bdb034b2c07',
+        apiKey: 'YOUR_WEB_API_KEY',
+        appId: 'YOUR_WEB_APP_ID',
         messagingSenderId: '1018558923142',
-        projectId: 'medmind-c6af2',
-        authDomain: 'medmind-c6af2.firebaseapp.com',
-        storageBucket: 'medmind-c6af2.firebasestorage.app',
+        projectId: 'medmind1-da4fa',
+        authDomain: 'medmind1-da4fa.firebaseapp.com',
+        storageBucket: 'medmind1-da4fa.firebasestorage.app',
       );
     }
 
@@ -62,9 +62,9 @@ class FirebaseConfig {
         apiKey: 'YOUR_IOS_API_KEY',
         appId: 'YOUR_IOS_APP_ID',
         messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-        projectId: 'medmind-c6af2',
-        storageBucket: 'medmind-c6af2.firebasestorage.app',
-        iosBundleId: 'com.example.medmind',
+        projectId: 'medmind1-da4fa',
+        storageBucket: 'medmind1-da4fa.firebasestorage.app',
+        iosBundleId: 'com.example.medmind1',
       );
     }
 

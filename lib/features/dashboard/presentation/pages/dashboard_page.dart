@@ -96,6 +96,10 @@ class _DashboardPageState extends State<DashboardPage> {
                             Navigator.pushNamed(context, '/medications'),
                         onViewHistory: () =>
                             Navigator.pushNamed(context, '/adherence-history'),
+                        onViewPrediction: () => Navigator.pushNamed(
+                          context,
+                          '/adherence-prediction',
+                        ),
                       ),
                       const SizedBox(height: 24),
 
