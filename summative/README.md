@@ -151,7 +151,7 @@ Expected prediction: ~55% adherence rate
 
 ## Video Demonstration
 
-**📹 YouTube Link:** [Click here to watch the 5-minute demonstration](YOUR_YOUTUBE_URL_HERE)
+**📹 Video Link:** [Click here to watch the demonstration](https://drive.google.com/drive/folders/1oOBdjKD7o44l4q0Ry3YEHfDGFJX7WfKp?usp=drive_link)
 
 **Video Contents:**
 - ✅ Mobile app demonstration with various prediction inputs
@@ -163,13 +163,7 @@ Expected prediction: ~55% adherence rate
 - ✅ API code walkthrough (prediction endpoint implementation)
 - ✅ Flutter code walkthrough (API integration)
 
-**Instructions to Record:**
-See `summative/VIDEO_DEMONSTRATION_GUIDE.md` for a detailed script and recording guide.
-
-**After Recording:**
-1. Upload video to YouTube (Public or Unlisted)
-2. Replace `YOUR_YOUTUBE_URL_HERE` above with your actual YouTube URL
-3. Ensure video is accessible and meets all requirements
+**Note:** Video is hosted on Google Drive. Ensure you have access permissions to view the content.
 
 ## Dependencies and Versions
 

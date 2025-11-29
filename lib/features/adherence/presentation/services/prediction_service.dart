@@ -14,8 +14,8 @@ class AdherencePredictionService {
   // API endpoint for predictions
   static const String _predictEndpoint = '/predict';
 
-  // Request timeout duration
-  static const Duration _timeout = Duration(seconds: 10);
+  // Request timeout duration (increased for cold starts on free tier)
+  static const Duration _timeout = Duration(seconds: 90);
 
   /// Predicts medication adherence rate based on patient features
   ///
@@ -128,7 +128,7 @@ class AdherencePredictionService {
     } on TimeoutException {
       // Request timed out
       throw TimeoutException(
-        'Request timed out after ${_timeout.inSeconds} seconds. Please check your connection and try again.',
+        'Request timed out after ${_timeout.inSeconds} seconds. The API may be starting up (cold start). Please wait a moment and try again.',
       );
     } on SocketException {
       // No internet connection

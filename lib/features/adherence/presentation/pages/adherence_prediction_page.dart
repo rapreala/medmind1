@@ -81,8 +81,10 @@ class _AdherencePredictionPageState extends State<AdherencePredictionPage> {
     // Show immediate feedback
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Making prediction...'),
-        duration: Duration(seconds: 1),
+        content: Text(
+          'Connecting to prediction API... This may take up to 60 seconds on first use.',
+        ),
+        duration: Duration(seconds: 3),
       ),
     );
 
@@ -241,6 +243,37 @@ class _AdherencePredictionPageState extends State<AdherencePredictionPage> {
                           color: Theme.of(
                             context,
                           ).colorScheme.onSurface.withValues(alpha: 0.7),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.access_time,
+                              size: 16,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'First prediction may take 30-60 seconds as the API starts up.',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
